@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jatendo's Website - Picking Recipes </title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        .container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .checkbox-group {
+            margin-bottom: 15px;
+        }
+        label {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Select a recipe</h1>
+        <form id="checkboxForm">
+            <div class="checkbox-group">
+                <input type="checkbox" id="option1" name="option1" value="Option 1">
+                <label for="option1">Banana Cake</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="option2" name="option2" value="Option 2">
+                <label for="option2">Option 2</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="option3" name="option3" value="Option 3">
+                <label for="option3">Option 3</label>
+            </div>
+        </form>
+    </div>
+    <script>
+        document.getElementById('option1').addEventListener('change', function() {
+            if (this.checked) {
+                window.location.href = 'page1new.html'; //
+            }
+        });
+
+        document.getElementById('option2').addEventListener('change', function() {
+            if (this.checked) {
+                window.location.href = 'page2.html'; // Replace with your desired URL
+            }
+        });
+
+        document.getElementById('option3').addEventListener('change', function() {
+            if (this.checked) {
+                window.location.href = 'page3.html'; // Replace with your desired URL
+            }
+        });
+    </script>
+</body>
+</html>
