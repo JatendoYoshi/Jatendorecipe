@@ -37,6 +37,10 @@
                 <input type="checkbox" id="option1" name="option1" value="Option 1">
                 <label for="option1">Banana Cake</label>
             </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="option2" name="option2" value="Option 2">
+                <label for="option2">Green Tea Roll</label>
+            </div>
 
     <script>
         document.getElementById('option1').addEventListener('change', function() {
@@ -45,5 +49,12 @@
             }
         });
     </script>
+        <script>
+            document.getElementById('option2').addEventListener('change', function() {
+                if (this.checked) {
+                    window.location.href = './Tickboxes Banana Cake.html'; //
+                }
+            });
+        </script>
 </body>
 </html>
