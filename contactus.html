@@ -112,6 +112,28 @@ button:hover {
 .cart li {
     padding: 5px 0;
 }
+// scripts.js
+let cart = [];
+
+function addToCart(product, price) {
+    cart.push({ product, price });
+    updateCart();
+}
+
+function updateCart() {
+    let cartItems = document.getElementById('cartItems');
+    cartItems.innerHTML = '';
+
+    let total = 0;
+    cart.forEach(item => {
+        let li = document.createElement('li');
+        li.textContent = `${item.product} - $${item.price}`;
+        cartItems.appendChild(li);
+        total += item.price;
+    });
+
+    document.getElementById('total').textContent = total;
+}
 
 </body>
 </html>
