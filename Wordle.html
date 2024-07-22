@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wordle Game</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Wordle Game</h1>
+    <div id="game-board"></div>
+    <div id="keyboard"></div>
+    <script src="scripts.js"></script>
+</body>
+</html>
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+table {
+    width: 80%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 18px;
+    text-align: left;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+thead {
+    background-color: #a1d9b8;
+}
+
+thead tr {
+    border-bottom: 1px solid #dddddd;
+}
+
+thead th {
+    padding: 12px 15px;
+    text-align: center;
+}
+
+tbody tr {
+    border-bottom: 1px solid #dddddd;
+}
+
+tbody tr:nth-of-type(even) {
+    background-color: #f3f3f3;
+}
+
+tbody tr:last-of-type {
+    border-bottom: 2px solid #a1d9b8;
+}
+
+tbody td {
+    padding: 12px 15px;
+}
+
+input[type="date"], select, input[type="text"] {
+    padding: 8px;
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    width: 100%; /* Make input fields take the full width of their columns */
+}
+
+select {
+    width: 100%; /* Ensure select fields take the full width of their columns */
+}
+
+input[type="date"]:focus, select:focus, input[type="text"]:focus {
+    outline: none;
+    border-color: #a1d9b8;
+}
+
+.autocomplete {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+.autocomplete-items {
+    position: absolute;
+    border: 1px solid #d4d4d4;
+    border-bottom: none;
+    border-top: none;
+    z-index: 99;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: white; /* Ensure the background color is white */
+    max-height: 200px;
+    overflow-y: auto;
+    box-sizing: border-box;
+    width: auto; /* Allows width to adjust based on content */
+}
+
+.autocomplete-items div {
+    padding: 10px;
+    cursor: pointer;
+    background-color: white; /* Ensure the background color is white */
+    border-bottom: 1px solid #d4d4d4;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+.autocomplete-items div:hover {
+    background-color: #e9e9e9;
+}
+
+.autocomplete-items img {
+    width: 25px; /* Ensure image width is 25px */
+    height: 25px; /* Ensure image height is 25px */
+    object-fit: cover;
+    margin-right: 10px;
+}
+
+.autocomplete-items span {
+    font-size: 16px; /* Font size of options */
+    color: black; /* Text color of options */
+    display: block;
+    overflow: hidden; /* Ensures text doesn't overflow */
+    white-space: nowrap; /* Prevents text wrapping */
+    text-overflow: ellipsis; /* Adds ellipsis for overflowing text */
+}
+
+input[type="text"] {
+    width: calc(100% - 22px); /* Account for padding and border */
+    box-sizing: border-box;
+}
+
+const wordList = ['apple', 'baker', 'candy', 'delta', 'eagle']; // List of words to guess
+const word = wordList[Math.floor(Math.random() * wordList.length)]; // Random word to guess
+const maxGuesses = 6; // Maximum number of guesses
+let currentGuess = '';
+let currentRow = 0;
+
+// Initialize the game board
+const gameBoard = document.getElementById('game-board');
+for (let i = 0; i < maxGuesses; i++) {
+    for (let j = 0; j < 5; j++) {
+        const letterBox = document.createElement('div');
+        letterBox.classList.add('letter-box');
+        gameBoard.appendChild(letterBox);
+    }
+}
+
+// Initialize the keyboard
+const keyboard = document.getElementById('keyboard');
+const keys = 'abcdefghijklmnopqrstuvwxyz'.split('');
+keys.forEach(key => {
+    const keyElement = document.createElement('div');
+    keyElement.classList.add('key');
+    keyElement.textContent = key;
+    keyElement.addEventListener('click', () => handleKeyPress(key));
+    keyboard.appendChild(keyElement);
+});
+
+document.addEventListener('keydown', event => {
+    if (/^[a-z]$/i.test(event.key)) {
+        handleKeyPress(event.key.toLowerCase());
+    } else if (event.key === 'Enter') {
+        handleSubmitGuess();
+    } else if (event.key === 'Backspace') {
+        handleBackspace();
+    }
+});
+
+function handleKeyPress(key) {
+    if (currentGuess.length < 5) {
+        currentGuess += key;
+        updateBoard();
+    }
+}
+
+function handleBackspace() {
+    currentGuess = currentGuess.slice(0, -1);
+    updateBoard();
+}
+
+function handleSubmitGuess() {
+    if (currentGuess.length === 5) {
+        const result = checkGuess(currentGuess);
+        updateResult(result);
+        if (currentGuess === word) {
+            alert('Congratulations! You guessed the word.');
+        } else if (currentRow === maxGuesses - 1) {
+            alert(`Game over! The word was ${word}.`);
+        }
+        currentGuess = '';
+        currentRow++;
+    }
+}
+
+function updateBoard() {
+    const startIndex = currentRow * 5;
+    for (let i = 0; i < 5; i++) {
+        const letterBox = gameBoard.children[startIndex + i];
+        letterBox.textContent = currentGuess[i] || '';
+    }
+}
+
+function checkGuess(guess) {
+    const result = Array(5).fill('absent');
+    const wordLetters = word.split('');
+
+    guess.split('').forEach((letter, index) => {
+        if (word[index] === letter) {
+            result[index] = 'correct';
+            wordLetters[index] = null;
+        }
+    });
+
+    guess.split('').forEach((letter, index) => {
+        if (result[index] !== 'correct' && wordLetters.includes(letter)) {
+            result[index] = 'present';
+            wordLetters[wordLetters.indexOf(letter)] = null;
+        }
+    });
+
+    return result;
+}
+
+function updateResult(result) {
+    const startIndex = currentRow * 5;
+    result.forEach((status, index) => {
+        const letterBox = gameBoard.children[startIndex + index];
+        letterBox.classList.add(status);
+    });
+}
+
