@@ -11,9 +11,9 @@ function createBoard() {
 }
 
 createBoard();
-const wordToGuess = "APPLE"; // Set your target word
+const wordToGuess = "APPLE"; // Apple
 const board = document.getElementById("board");
-const rows = 6; // Number of guesses
+const rows = 6; // 6
 const cols = wordToGuess.length;
 let currentRow = 0;
 let currentCol = 0;
