@@ -1,6 +1,6 @@
 const board = document.getElementById("board");
-const wordToGuess = "APPLE"; // Set your target word
-const rows = 6; // Number of guesses
+const wordToGuess = "APPLE"; // APPLE
+const rows = 6; // 6
 const cols = wordToGuess.length;
 
 function createBoard() {
@@ -81,9 +81,9 @@ function handleInput(key) {
 
 document.addEventListener("keydown", (e) => handleInput(e.key));
 createBoard();
-const wordToGuess = "APPLE"; // Set your target word
+const wordToGuess = "APPLE"; // apple
 const board = document.getElementById("board");
-const rows = 6; // Number of guesses
+const rows = 6; // 6
 const cols = wordToGuess.length;
 let currentRow = 0;
 let currentCol = 0;
