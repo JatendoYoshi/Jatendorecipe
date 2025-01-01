@@ -43,8 +43,13 @@
             </div>
             <div class="checkbox-group">
                 <input type="checkbox" id="option3" name="option3" value="Option 3">
-                <label for="option2">Fudgy Brownies</label>
+                <label for="option3">Fudgy Brownies</label>
             </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="option4" name="option4" value="Option 4">
+                <label for="option4">Coffee Sponge Roll</label>
+            </div>
+
 
     <script>
         document.getElementById('option1').addEventListener('change', function() {
@@ -67,5 +72,12 @@
                 }
             });
         </script>
+                <script>
+                    document.getElementById('option4').addEventListener('change', function() {
+                        if (this.checked) {
+                            window.location.href = './coffeespongeroll.html'; //
+                        }
+                    });
+                </script>
 </body>
 </html>
