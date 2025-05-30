@@ -49,6 +49,11 @@
                 <input type="checkbox" id="option4" name="option4" value="Option 4">
                 <label for="option4">Coffee Sponge Roll</label>
             </div>
+                   <div class="checkbox-group">
+                <input type="checkbox" id="option5" name="option4" value="Option 5">
+                <label for="option5">Soft, Fluffy Chocolate Cake</label>
+            </div>
+            
 
 
     <script>
@@ -79,5 +84,12 @@
                         }
                     });
                 </script>
+            <script>
+            document.getElementById('option5').addEventListener('change', function() {
+                if (this.checked) {
+                    window.location.href = './chococake.html'; //
+                }
+            });
+        </script>
 </body>
 </html>
