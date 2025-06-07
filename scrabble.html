@@ -38,6 +38,7 @@
     <input type="text" id="wordInput" placeholder="Enter a word" />
     <button onclick="calculateScore()">Calculate Score</button>
     <div class="result" id="scoreResult"></div>
+    <div class="result" id="totalScoreResult"></div>
   </div>
 
   <script>
@@ -47,6 +48,8 @@
       U:1, V:4, W:4, X:8, Y:4, Z:10
     };
 
+    let totalScore = 0;
+
     function calculateScore() {
       const word = document.getElementById("wordInput").value.toUpperCase();
       let score = 0;
@@ -55,7 +58,10 @@
           score += letterValues[letter];
         }
       }
-      document.getElementById("scoreResult").innerText = `Score: ${score}`;
+      totalScore += score;
+      document.getElementById("scoreResult").innerText = `Score for \"${word}\": ${score}`;
+      document.getElementById("totalScoreResult").innerText = `Total Score: ${totalScore}`;
+      document.getElementById("wordInput").value = "";
     }
   </script>
 </body>
