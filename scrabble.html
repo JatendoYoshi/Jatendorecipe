@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Scrabble Score Counter</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+      padding: 30px;
+      text-align: center;
+    }
+    .container {
+      background: white;
+      padding: 20px;
+      max-width: 400px;
+      margin: auto;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    input, button {
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 1rem;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .result {
+      margin-top: 20px;
+      font-size: 1.2rem;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Scrabble Score Counter</h2>
+    <input type="text" id="wordInput" placeholder="Enter a word" />
+    <button onclick="calculateScore()">Calculate Score</button>
+    <div class="result" id="scoreResult"></div>
+  </div>
+
+  <script>
+    const letterValues = {
+      A:1, B:3, C:3, D:2, E:1, F:4, G:2, H:4, I:1, J:8,
+      K:5, L:1, M:3, N:1, O:1, P:3, Q:10, R:1, S:1, T:1,
+      U:1, V:4, W:4, X:8, Y:4, Z:10
+    };
+
+    function calculateScore() {
+      const word = document.getElementById("wordInput").value.toUpperCase();
+      let score = 0;
+      for (let letter of word) {
+        if (letterValues[letter]) {
+          score += letterValues[letter];
+        }
+      }
+      document.getElementById("scoreResult").innerText = `Score: ${score}`;
+    }
+  </script>
+</body>
+</html>
