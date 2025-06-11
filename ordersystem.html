@@ -49,32 +49,44 @@
 
     <div class="price-section">
       <h4>Total: £<span id="totalPrice">0.00</span></h4>
-      <button onclick="applyReferral()">Apply 10% Discount</button>
+      <!-- Discount button removed -->
       <button onclick="resetAll()" style="background:#dc3545;">Reset All</button>
     </div>
   </div>
 
   <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyAY5H-Dg0i3ymmkSi1t-Jyx5Qh4zu35NPs",
-  authDomain: "order-management-system-ff94c.firebaseapp.com",
-  projectId: "order-management-system-ff94c",
-  storageBucket: "order-management-system-ff94c.firebasestorage.app",
-  messagingSenderId: "439546269004",
-  appId: "1:439546269004:web:294d4371d83285335a93e9",
-  measurementId: "G-JMYBVW5M0Q"
-};
+    const firebaseConfig = {
+      apiKey: "AIzaSyAY5H-Dg0i3ymmkSi1t-Jyx5Qh4zu35NPs",
+      authDomain: "order-management-system-ff94c.firebaseapp.com",
+      projectId: "order-management-system-ff94c",
+      storageBucket: "order-management-system-ff94c.firebasestorage.app",
+      messagingSenderId: "439546269004",
+      appId: "1:439546269004:web:294d4371d83285335a93e9",
+      measurementId: "G-JMYBVW5M0Q"
+    };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
+    // Map menu items to fixed prices
+    const fixedPrices = {
+      "The Classic": 5.99,
+      "The Serbian Burger": 6.99,
+      "The BigMak": 8.99,
+      "Meal + 🍟🥤": 2.75
+    };
+
     let orders = [];
-    let referralApplied = false;
     let editing = false, editingId = null;
     let customPresets = [];
 
-    // Quick autofill
+    // Quick autofill with auto price set
     function autofill(text) {
       document.getElementById('orderInput').value = text;
+      if (fixedPrices.hasOwnProperty(text)) {
+        document.getElementById('orderPrice').value = fixedPrices[text].toFixed(2);
+      } else {
+        document.getElementById('orderPrice').value = '';
+      }
     }
 
     function autofillWithMeal() {
@@ -84,6 +96,13 @@ const firebaseConfig = {
         return;
       }
       input.value += ' + Meal 🍟🥤';
+
+      // Calculate combined price (base + meal)
+      let baseItem = input.value.replace(' + Meal 🍟🥤', '');
+      let basePrice = fixedPrices[baseItem] || 0;
+      let mealPrice = fixedPrices['Meal + 🍟🥤'] || 0;
+
+      document.getElementById('orderPrice').value = (basePrice + mealPrice).toFixed(2);
     }
 
     // Add a custom preset and save to Firestore
@@ -93,7 +112,6 @@ const firebaseConfig = {
         alert('Cannot be empty');
         return;
       }
-      // Add to Firestore collection 'customPresets'
       await db.collection('customPresets').add({ text: txt });
       document.getElementById('customOrder').value = '';
       await loadCustomPresets();
@@ -106,7 +124,6 @@ const firebaseConfig = {
 
       customPresets.forEach(doc => {
         let txt = doc.text;
-        let id = doc.id;
         let b = document.createElement('button');
         b.innerText = txt;
         b.classList.add('autofill-custom');
@@ -123,27 +140,15 @@ const firebaseConfig = {
       buildCustomButtons();
     }
 
-    // Save referral state to Firestore - for demo we'll keep it local
-    function applyReferral() {
-      if (referralApplied) {
-        alert('Already applied');
-        return;
-      }
-      referralApplied = true;
-      renderOrders();
-    }
-
     // Reset all data in Firestore collections
     async function resetAll() {
       if (!confirm('Delete ALL orders and presets?')) return;
 
-      // Delete all orders
       const ordersSnapshot = await db.collection('orders').get();
       const ordersBatch = db.batch();
       ordersSnapshot.forEach(doc => ordersBatch.delete(doc.ref));
       await ordersBatch.commit();
 
-      // Delete all presets
       const presetsSnapshot = await db.collection('customPresets').get();
       const presetsBatch = db.batch();
       presetsSnapshot.forEach(doc => presetsBatch.delete(doc.ref));
@@ -151,7 +156,6 @@ const firebaseConfig = {
 
       orders = [];
       customPresets = [];
-      referralApplied = false;
       editing = false; editingId = null;
 
       renderOrders();
@@ -193,7 +197,6 @@ const firebaseConfig = {
         total += o.price;
       });
 
-      if (referralApplied) total *= 0.9;
       document.getElementById('totalPrice').innerText = total.toFixed(2);
     }
 
@@ -223,12 +226,10 @@ const firebaseConfig = {
       }
 
       if (editing) {
-        // Update existing order
         await db.collection('orders').doc(editingId).update({ item, price });
         editing = false;
         editingId = null;
       } else {
-        // Assign next numeric ID
         let maxId = 0;
         if (orders.length > 0) {
           maxId = Math.max(...orders.map(o => Number(o.id)));
