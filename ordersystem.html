@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>BoroBurgers - Local Order Manager</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <title>BoroBurgers - Local Order Manager (Firebase Sync)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body { font-family: Arial, sans-serif; background: #f8f9fa; margin: 20px; text-align: center; }
     .container { max-width: 600px; margin: auto; background: white; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1); border-radius: 8px; }
@@ -19,12 +19,16 @@
     .price-section { margin-top: 20px; }
     .order-buttons button { margin-left: 5px; }
   </style>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
   <div class="container">
-    <h2>BoroBurgers Order Manager (Local)</h2>
-    <input id="orderInput" placeholder="Order Details">
-    <input id="orderPrice" type="number" step="0.01" placeholder="Price (£)">
+    <h2>BoroBurgers Order Manager (Firebase Sync)</h2>
+    <input id="orderInput" placeholder="Order Details" />
+    <input id="orderPrice" type="number" step="0.01" placeholder="Price (£)" />
     <button onclick="submitOrder()">Submit Order</button>
 
     <div class="autofill-buttons">
@@ -37,7 +41,7 @@
 
     <div class="custom-autofill">
       <h4>Add Custom Autofill:</h4>
-      <input id="customOrder" placeholder="Preset order">
+      <input id="customOrder" placeholder="Preset order" />
       <button onclick="addCustom()">Add</button>
     </div>
 
@@ -51,111 +55,197 @@
   </div>
 
   <script>
-    let orders = JSON.parse(localStorage.getItem('orders')) || [];
-    let nextID = parseInt(localStorage.getItem('nextID') || '1', 10);
-    let editing = false, editingId = null;
-    let referralApplied = localStorage.getItem('referral') === 'true';
-    let customPresets = JSON.parse(localStorage.getItem('customPresets')) || [];
+    // Your Firebase config here — REPLACE with your actual project config
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
 
-    function autofill(text){ document.getElementById('orderInput').value = text; }
-    function autofillWithMeal(){
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    let orders = [];
+    let referralApplied = false;
+    let editing = false, editingId = null;
+    let customPresets = [];
+
+    // Quick autofill
+    function autofill(text) {
+      document.getElementById('orderInput').value = text;
+    }
+
+    function autofillWithMeal() {
       let input = document.getElementById('orderInput');
-      if (!input.value.trim()){ alert('Enter text first'); return; }
+      if (!input.value.trim()) {
+        alert('Enter text first');
+        return;
+      }
       input.value += ' + Meal 🍟🥤';
     }
-    function addCustom(){
+
+    // Add a custom preset and save to Firestore
+    async function addCustom() {
       let txt = document.getElementById('customOrder').value.trim();
-      if(!txt){ alert('Cannot be empty'); return; }
-      customPresets.push(txt);
-      localStorage.setItem('customPresets', JSON.stringify(customPresets));
-      buildCustomButtons();
+      if (!txt) {
+        alert('Cannot be empty');
+        return;
+      }
+      // Add to Firestore collection 'customPresets'
+      await db.collection('customPresets').add({ text: txt });
       document.getElementById('customOrder').value = '';
-      buildCustomButtons();
+      await loadCustomPresets();
     }
-    function buildCustomButtons(){
+
+    // Build custom buttons from Firestore data
+    function buildCustomButtons() {
       const div = document.querySelector('.autofill-buttons');
-      // remove existing custom
-      div.querySelectorAll('.autofill-custom').forEach(b=>b.remove());
-      customPresets.forEach(txt => {
+      div.querySelectorAll('.autofill-custom').forEach(b => b.remove());
+
+      customPresets.forEach(doc => {
+        let txt = doc.text;
+        let id = doc.id;
         let b = document.createElement('button');
         b.innerText = txt;
         b.classList.add('autofill-custom');
         b.style.background = '#ffc107';
-        b.onclick = ()=>autofill(txt);
+        b.onclick = () => autofill(txt);
         div.appendChild(b);
       });
     }
 
-    function saveOrders(){
-      localStorage.setItem('orders', JSON.stringify(orders));
-      localStorage.setItem('nextID', nextID);
+    // Load custom presets from Firestore
+    async function loadCustomPresets() {
+      const snapshot = await db.collection('customPresets').get();
+      customPresets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      buildCustomButtons();
     }
 
-    function renderOrders(){
+    // Save referral state to Firestore - for demo we'll keep it local
+    function applyReferral() {
+      if (referralApplied) {
+        alert('Already applied');
+        return;
+      }
+      referralApplied = true;
+      renderOrders();
+    }
+
+    // Reset all data in Firestore collections
+    async function resetAll() {
+      if (!confirm('Delete ALL orders and presets?')) return;
+
+      // Delete all orders
+      const ordersSnapshot = await db.collection('orders').get();
+      const ordersBatch = db.batch();
+      ordersSnapshot.forEach(doc => ordersBatch.delete(doc.ref));
+      await ordersBatch.commit();
+
+      // Delete all presets
+      const presetsSnapshot = await db.collection('customPresets').get();
+      const presetsBatch = db.batch();
+      presetsSnapshot.forEach(doc => presetsBatch.delete(doc.ref));
+      await presetsBatch.commit();
+
+      orders = [];
+      customPresets = [];
+      referralApplied = false;
+      editing = false; editingId = null;
+
+      renderOrders();
+      buildCustomButtons();
+    }
+
+    // Load orders from Firestore and render
+    async function loadOrders() {
+      const snapshot = await db.collection('orders').orderBy('id').get();
+      orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      renderOrders();
+    }
+
+    // Render orders list and total price
+    function renderOrders() {
       const ul = document.getElementById('orderList');
       ul.innerHTML = '';
+
+      let total = 0;
       orders.forEach(o => {
         let li = document.createElement('li');
         li.innerHTML = `#${o.id} - ${o.item} (£${o.price.toFixed(2)})`;
+
         let btns = document.createElement('span');
         btns.classList.add('order-buttons');
+
         let eB = document.createElement('button');
-        eB.innerText='Edit'; eB.onclick=()=>startEdit(o.id);
+        eB.innerText = 'Edit';
+        eB.onclick = () => startEdit(o.id);
+
         let dB = document.createElement('button');
-        dB.innerText='Delete'; dB.onclick=()=>deleteOrder(o.id);
-        btns.append(eB,dB);
+        dB.innerText = 'Delete';
+        dB.onclick = () => deleteOrder(o.id);
+
+        btns.append(eB, dB);
         li.appendChild(btns);
         ul.appendChild(li);
+
+        total += o.price;
       });
-      let total = orders.reduce((s,o)=>s+o.price,0);
+
       if (referralApplied) total *= 0.9;
       document.getElementById('totalPrice').innerText = total.toFixed(2);
     }
 
-    function deleteOrder(id){
-      orders = orders.filter(o=>o.id!==id);
-      saveOrders(); renderOrders();
+    // Delete order from Firestore
+    async function deleteOrder(id) {
+      await db.collection('orders').doc(id).delete();
+      await loadOrders();
     }
 
-    function startEdit(id){
-      let o = orders.find(x=>x.id===id);
+    // Start editing order
+    function startEdit(id) {
+      let o = orders.find(x => x.id === id);
+      if (!o) return;
       document.getElementById('orderInput').value = o.item;
       document.getElementById('orderPrice').value = o.price;
-      editing = true; editingId = id;
+      editing = true;
+      editingId = id;
     }
 
-    function submitOrder(){
+    // Submit order to Firestore
+    async function submitOrder() {
       let item = document.getElementById('orderInput').value.trim();
       let price = parseFloat(document.getElementById('orderPrice').value);
-      if(!item||isNaN(price)||price<=0){ alert('Valid input needed'); return; }
-
-      if(editing){
-        let o = orders.find(x=>x.id===editingId);
-        o.item = item; o.price = price;
-        editing = false; editingId = null;
-      } else {
-        orders.push({ id: nextID++, item, price });
+      if (!item || isNaN(price) || price <= 0) {
+        alert('Valid input needed');
+        return;
       }
-      saveOrders(); renderOrders();
-      document.getElementById('orderInput').value=''; document.getElementById('orderPrice').value='';
+
+      if (editing) {
+        // Update existing order
+        await db.collection('orders').doc(editingId).update({ item, price });
+        editing = false;
+        editingId = null;
+      } else {
+        // Assign next numeric ID
+        let maxId = 0;
+        if (orders.length > 0) {
+          maxId = Math.max(...orders.map(o => Number(o.id)));
+        }
+        let newId = (maxId + 1).toString();
+
+        await db.collection('orders').doc(newId).set({ id: newId, item, price });
+      }
+      document.getElementById('orderInput').value = '';
+      document.getElementById('orderPrice').value = '';
+      await loadOrders();
     }
 
-    function applyReferral(){
-      if(referralApplied){ alert('Already applied'); return; }
-      referralApplied = true;
-      localStorage.setItem('referral','true');
-      renderOrders();
-    }
-
-    function resetAll(){
-      if(!confirm('Delete ALL orders and presets?')) return;
-      orders=[]; nextID=1; referralApplied=false; localStorage.clear();
-      renderOrders(); buildCustomButtons();
-    }
-
-    window.onload = ()=>{
-      buildCustomButtons();
-      renderOrders();
+    window.onload = async () => {
+      await loadCustomPresets();
+      await loadOrders();
     };
   </script>
 </body>
