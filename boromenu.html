@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Boro Burgers Menu</title>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
   <style>
@@ -22,7 +22,7 @@
     }
 
     .container {
-      max-width:20000px;
+      max-width: 900px;
       margin: auto;
       padding: 20px;
     }
@@ -58,6 +58,7 @@
     .price {
       font-weight: bold;
       color: #ff4d00;
+      white-space: nowrap;
     }
   </style>
 </head>
@@ -67,92 +68,87 @@
     <p>Two Teens With The Aim of Filling People Up</p>
   </header>
 
-
+  <div class="container">
+    <!-- Burgers Section -->
     <div class="menu-section">
-       <div class="Container"></div>
       <h2>Burgers</h2>
+
       <div class="menu-item">
         <div>
-
           <h3>The Classic</h3>
-          <p>Brioche bun with beef patty, with shredded lettuce, tomatoes, caramelized onions, and your choice of ketchup/mustard.</p>
+          <p>Brioche bun with beef patty, lettuce, tomatoes, caramelized onions, ketchup/mustard.</p>
         </div>
         <div class="price">£7.00</div>
       </div>
+
       <div class="menu-item">
         <div>
           <h3>Serbian Classic</h3>
-          <p>Brioche bun with serbian beef & pork patty, with shredded lettuce, tomatoes, caramelized onions, and your choice of ketchup/mustard.</p>
+          <p>Serbian beef & pork patty with all the Classic toppings.</p>
         </div>
         <div class="price">£7.00</div>
       </div>
-                <h3>The BigMak</h3>
-          <p>Brioche bun with double serbian beef & pork patty, with shredded lettuce, tomatoes, caramelized onions, and your choice of ketchup/mustard.</p>
+
+      <div class="menu-item">
+        <div>
+          <h3>The BigMak</h3>
+          <p>Double Serbian patty, lettuce, tomatoes, caramelized onions, ketchup/mustard.</p>
         </div>
         <div class="price">£9.00</div>
       </div>
-      <div class="menu-item">
-        <div>
- <p></p>
-
-    <div class="menu-section">
-            <div class="Container"></div>
-      <h2>Extras</h2>
-      <div class="menu-item">
-        <div>
-          <h3>Shredded Lettuce</h3>
-        </div>
-        <div class="price">£0.75</div>
-      </div>
-      <div class="menu-item">
-        <div>
-          <h3>Tomatoes</h3>
-        </div>
-        <div class="price">£0.75</div>
-      </div>
     </div>
+
+    <!-- Extras Section -->
+    <div class="menu-section">
+      <h2>Extras</h2>
+
       <div class="menu-item">
-        <div>
-          <h3>Caramalized Onions</h3>
-        </div>
+        <div><h3>Shredded Lettuce</h3></div>
+        <div class="price">£0.75</div>
+      </div>
+
+      <div class="menu-item">
+        <div><h3>Tomatoes</h3></div>
+        <div class="price">£0.75</div>
+      </div>
+
+      <div class="menu-item">
+        <div><h3>Caramelized Onions</h3></div>
         <div class="price">£1.00</div>
       </div>
-    </div>
+
       <div class="menu-item">
-        <div>
-          <h3>Signature Spicy Mayo Sauce</h3>
-        </div>
+        <div><h3>Signature Spicy Mayo Sauce</h3></div>
         <div class="price">£0.50</div>
+      </div>
     </div>
-  </div>
-  
 
+    <!-- Drinks Section -->
     <div class="menu-section">
-       <div class="Container"></div>
       <h2>Drinks</h2>
+
       <div class="menu-item">
-        <div>
-          <h3>Diet Coke</h3>
-        </div>
-        <div class="price">£3.00</div>
-      </div>
-      <div class="menu-item">
-        <div>
-          <h3>Dr Pepper</h3>
-        </div>
+        <div><h3>Diet Coke</h3></div>
         <div class="price">£3.00</div>
       </div>
 
+      <div class="menu-item">
+        <div><h3>Dr Pepper</h3></div>
+        <div class="price">£3.00</div>
+      </div>
+    </div>
 
+    <!-- Meal Deal -->
     <div class="menu-section">
-      <div class="Container"></div>
       <h2>Make a Meal Deal!</h2>
       <div class="menu-item">
         <div>
           <h3>Burger + Crisps + Drink Meal Deal</h3>
-          <p>Pick your choice of burger, a packet of crisps, and a drink (Diet Coke/Dr. Pepper) to make a meal deal!</p>
+          <p>Choose any burger + packet of crisps + Diet Coke or Dr Pepper.</p>
         </div>
         <div class="price">+£2.75</div>
       </div>
+    </div>
+  </div>
 </body>
 </html>
