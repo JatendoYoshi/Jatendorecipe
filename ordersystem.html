@@ -21,7 +21,6 @@
     }
     h2, h4 {
       color: #007bff;
-      margin-top: 0;
     }
     input, button {
       margin: 5px;
@@ -54,6 +53,7 @@
       display: flex;
       justify-content: space-between;
       border-radius: 5px;
+      align-items: center;
     }
     .custom-autofill {
       margin: 15px 0;
@@ -64,14 +64,17 @@
     .price-section {
       margin-top: 20px;
     }
+    .order-buttons button {
+      margin-left: 5px;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h2>BoroBurgers Order Management</h2>
     <input type="text" id="orderInput" placeholder="Enter order details" />
-    <input type="number" id="orderPrice" placeholder="Set price (£)" />
-    <button onclick="addOrder()">Add Order</button>
+    <input type="number" step="0.01" id="orderPrice" placeholder="Set price (£)" />
+    <button onclick="submitOrder()">Submit Order</button>
 
     <div class="autofill-buttons">
       <h4>Quick Fill Options:</h4>
@@ -92,6 +95,7 @@
     <div class="price-section">
       <h4>Total Price: £<span id="totalPrice">0.00</span></h4>
       <button onclick="applyReferral()">Referral Code (10% Off)</button>
+      <button onclick="resetOrders()" style="background:#dc3545;">Reset All Orders</button>
     </div>
   </div>
 
@@ -99,6 +103,9 @@
     const backendURL = "https://boroburgersorders.onrender.com";
     let orderCounter = parseInt(localStorage.getItem('orderCounter') || '1', 10);
     let totalPrice = 0.00;
+    let isEditing = false;
+    let editingId = null;
+    let referralApplied = localStorage.getItem('referralApplied') === 'true';
 
     function autofill(text) {
       document.getElementById('orderInput').value = text;
@@ -115,17 +122,12 @@
 
     function addCustomAutofill() {
       const customOrder = document.getElementById('customOrder').value.trim();
-      if (!customOrder) {
-        alert("Custom order cannot be empty!");
-        return;
-      }
+      if (!customOrder) return alert("Custom order cannot be empty!");
       const btn = document.createElement('button');
       btn.innerText = customOrder;
       btn.style.background = "#ffc107";
       btn.onclick = () => autofill(customOrder);
       document.querySelector('.autofill-buttons').appendChild(btn);
-
-      // store in localStorage
       const arr = JSON.parse(localStorage.getItem('customOrders') || '[]');
       arr.push(customOrder);
       localStorage.setItem('customOrders', JSON.stringify(arr));
@@ -147,45 +149,75 @@
         const res = await fetch(`${backendURL}/orders`);
         const data = await res.json();
         totalPrice = data.reduce((sum, o) => sum + o.price, 0.00);
+        if (referralApplied) totalPrice *= 0.9;
         document.getElementById('totalPrice').innerText = totalPrice.toFixed(2);
 
         const list = document.getElementById('orderList');
         list.innerHTML = data.map(o =>
-          `<li>#${o.id} - ${o.item} (£${o.price.toFixed(2)}) 
-            <button onclick="deleteOrder(${o.id}, ${o.price.toFixed(2)})">Delete</button>
+          `<li>
+            #${o.id} - ${o.item} (£${o.price.toFixed(2)})
+            <span class="order-buttons">
+              <button onclick="editOrder(${o.id}, '${o.item.replace(/'/g, "\\'")}', ${o.price})">Edit</button>
+              <button onclick="deleteOrder(${o.id})">Delete</button>
+            </span>
           </li>`
         ).join('');
-      } catch (e) {
+      } catch {
         alert("Failed to fetch orders.");
       }
     }
 
-    async function addOrder() {
+    async function submitOrder() {
       const item = document.getElementById('orderInput').value.trim();
       const price = parseFloat(document.getElementById('orderPrice').value);
       if (!item || isNaN(price) || price <= 0) {
-        alert("Please enter valid order and price!");
-        return;
+        return alert("Please enter a valid order and price!");
       }
-      const newOrder = { id: orderCounter++, item, price };
-      localStorage.setItem('orderCounter', orderCounter);
 
-      try {
-        const res = await fetch(`${backendURL}/orders`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(newOrder)
-        });
-        if (!res.ok) throw new Error("Server error");
-        document.getElementById('orderInput').value = '';
-        document.getElementById('orderPrice').value = '';
-        fetchOrders();
-      } catch {
-        alert("Failed to add order.");
+      if (isEditing) {
+        // Update order
+        try {
+          await fetch(`${backendURL}/orders/${editingId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: editingId, item, price })
+          });
+          isEditing = false;
+          editingId = null;
+          fetchOrders();
+        } catch {
+          alert("Failed to update order.");
+        }
+      } else {
+        // New order
+        const newOrder = { id: orderCounter++, item, price };
+        localStorage.setItem('orderCounter', orderCounter);
+        try {
+          const res = await fetch(`${backendURL}/orders`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newOrder)
+          });
+          if (!res.ok) throw new Error("Server error");
+          fetchOrders();
+        } catch {
+          alert("Failed to add order.");
+        }
       }
+
+      document.getElementById('orderInput').value = '';
+      document.getElementById('orderPrice').value = '';
     }
 
-    async function deleteOrder(id, price) {
+    function editOrder(id, item, price) {
+      document.getElementById('orderInput').value = item;
+      document.getElementById('orderPrice').value = price;
+      isEditing = true;
+      editingId = id;
+      alert(`Editing order #${id}`);
+    }
+
+    async function deleteOrder(id) {
       try {
         await fetch(`${backendURL}/orders/${id}`, { method: 'DELETE' });
         fetchOrders();
@@ -195,9 +227,31 @@
     }
 
     function applyReferral() {
+      if (referralApplied) return alert("Referral code already applied!");
       totalPrice *= 0.9;
       document.getElementById('totalPrice').innerText = totalPrice.toFixed(2);
+      referralApplied = true;
+      localStorage.setItem('referralApplied', 'true');
       alert("Referral code applied! 10% Discount!");
+    }
+
+    async function resetOrders() {
+      if (!confirm("Are you sure you want to delete ALL orders?")) return;
+      try {
+        const res = await fetch(`${backendURL}/orders`);
+        const data = await res.json();
+        for (let o of data) {
+          await fetch(`${backendURL}/orders/${o.id}`, { method: 'DELETE' });
+        }
+        orderCounter = 1;
+        localStorage.setItem('orderCounter', '1');
+        localStorage.removeItem('referralApplied');
+        referralApplied = false;
+        totalPrice = 0;
+        fetchOrders();
+      } catch {
+        alert("Failed to reset orders.");
+      }
     }
 
     window.onload = () => {
