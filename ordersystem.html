@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>BoroBurgers - Local Order Manager (Firebase Sync)</title>
+  <title>BoroBurgers - Firebase Sync (Multiple Items)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body { font-family: Arial, sans-serif; background: #f8f9fa; margin: 20px; text-align: center; }
@@ -27,8 +27,8 @@
 <body>
   <div class="container">
     <h2>BoroBurgers Order Manager (Firebase Sync)</h2>
-    <input id="orderInput" placeholder="Order Details" />
-    <input id="orderPrice" type="number" step="0.01" placeholder="Price (£)" />
+    <input id="orderInput" placeholder="Order Details (comma separated)" />
+    <input id="orderPrice" type="number" step="0.01" placeholder="Override Price (£) - optional" />
     <button onclick="submitOrder()">Submit Order</button>
 
     <div class="autofill-buttons">
@@ -49,7 +49,6 @@
 
     <div class="price-section">
       <h4>Total: £<span id="totalPrice">0.00</span></h4>
-      <!-- Discount button removed -->
       <button onclick="resetAll()" style="background:#dc3545;">Reset All</button>
     </div>
   </div>
@@ -67,26 +66,21 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Map menu items to fixed prices
+    // Fixed prices per item
     const fixedPrices = {
-      "The Classic": 5.99,
-      "The Serbian Burger": 6.99,
-      "The BigMak": 8.99,
-      "Meal + 🍟🥤": 2.75
+      'The Classic': 5.00,
+      'The Serbian Burger': 6.50,
+      'The BigMak': 7.00,
+      'Meal + 🍟🥤': 3.50
     };
 
     let orders = [];
     let editing = false, editingId = null;
     let customPresets = [];
 
-    // Quick autofill with auto price set
+    // Quick autofill
     function autofill(text) {
       document.getElementById('orderInput').value = text;
-      if (fixedPrices.hasOwnProperty(text)) {
-        document.getElementById('orderPrice').value = fixedPrices[text].toFixed(2);
-      } else {
-        document.getElementById('orderPrice').value = '';
-      }
     }
 
     function autofillWithMeal() {
@@ -96,13 +90,6 @@
         return;
       }
       input.value += ' + Meal 🍟🥤';
-
-      // Calculate combined price (base + meal)
-      let baseItem = input.value.replace(' + Meal 🍟🥤', '');
-      let basePrice = fixedPrices[baseItem] || 0;
-      let mealPrice = fixedPrices['Meal + 🍟🥤'] || 0;
-
-      document.getElementById('orderPrice').value = (basePrice + mealPrice).toFixed(2);
     }
 
     // Add a custom preset and save to Firestore
@@ -144,11 +131,13 @@
     async function resetAll() {
       if (!confirm('Delete ALL orders and presets?')) return;
 
+      // Delete all orders
       const ordersSnapshot = await db.collection('orders').get();
       const ordersBatch = db.batch();
       ordersSnapshot.forEach(doc => ordersBatch.delete(doc.ref));
       await ordersBatch.commit();
 
+      // Delete all presets
       const presetsSnapshot = await db.collection('customPresets').get();
       const presetsBatch = db.batch();
       presetsSnapshot.forEach(doc => presetsBatch.delete(doc.ref));
@@ -216,37 +205,61 @@
       editingId = id;
     }
 
-    // Submit order to Firestore
+    // Submit order to Firestore supporting multiple items at once
     async function submitOrder() {
-      let item = document.getElementById('orderInput').value.trim();
-      let price = parseFloat(document.getElementById('orderPrice').value);
-      if (!item || isNaN(price) || price <= 0) {
-        alert('Valid input needed');
+      let itemsText = document.getElementById('orderInput').value.trim();
+      let manualPrice = parseFloat(document.getElementById('orderPrice').value);
+
+      if (!itemsText) {
+        alert('Enter at least one item.');
+        return;
+      }
+
+      let items = itemsText.split(',').map(s => s.trim()).filter(Boolean);
+      if (items.length === 0) {
+        alert('Enter valid items.');
         return;
       }
 
       if (editing) {
-        await db.collection('orders').doc(editingId).update({ item, price });
-        editing = false;
-        editingId = null;
-      } else {
-        let maxId = 0;
-        if (orders.length > 0) {
-          maxId = Math.max(...orders.map(o => Number(o.id)));
-        }
-        let newId = (maxId + 1).toString();
-
-        await db.collection('orders').doc(newId).set({ id: newId, item, price });
+        alert('Editing multiple items at once is not supported. Please save or cancel current edit first.');
+        return;
       }
+
+      // Assign next numeric ID to each new item
+      let maxId = orders.length > 0 ? Math.max(...orders.map(o => Number(o.id))) : 0;
+      let batch = db.batch();
+
+      try {
+        items.forEach((item, idx) => {
+          maxId++;
+          // Use fixed price if exists, otherwise manual price, else 0 (invalid)
+          let price = fixedPrices[item] ?? manualPrice ?? 0;
+          if (price <= 0) {
+            alert(`Price for "${item}" is invalid or missing.`);
+            throw new Error(`Invalid price for ${item}`);
+          }
+          let docRef = db.collection('orders').doc(maxId.toString());
+          batch.set(docRef, { id: maxId.toString(), item, price });
+        });
+      } catch (e) {
+        return; // Stop if error
+      }
+
+      await batch.commit();
+
       document.getElementById('orderInput').value = '';
       document.getElementById('orderPrice').value = '';
       await loadOrders();
     }
 
-    window.onload = async () => {
-      await loadCustomPresets();
+    // Initialize app
+    async function init() {
       await loadOrders();
-    };
+      await loadCustomPresets();
+    }
+
+    init();
   </script>
 </body>
 </html>
