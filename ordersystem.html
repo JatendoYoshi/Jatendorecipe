@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>BoroBurgers - Firebase Sync (Multiple Items)</title>
+  <title>BoroBurgers - Firebase Sync (Multiple Items with Accumulative Quickfill)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body { font-family: Arial, sans-serif; background: #f8f9fa; margin: 20px; text-align: center; }
@@ -33,10 +33,10 @@
 
     <div class="autofill-buttons">
       <h4>Quick Fill:</h4>
-      <button onclick="autofill('The Classic')">The Classic</button>
-      <button onclick="autofill('The Serbian Burger')">The Serbian Burger</button>
-      <button onclick="autofill('The BigMak')">The BigMak</button>
-      <button onclick="autofillWithMeal()">Meal + 🍟🥤</button>
+      <button onclick="appendToOrderInput('The Classic')">The Classic</button>
+      <button onclick="appendToOrderInput('The Serbian Burger')">The Serbian Burger</button>
+      <button onclick="appendToOrderInput('The BigMak')">The BigMak</button>
+      <button onclick="appendToOrderInput('Meal + 🍟🥤')">Meal + 🍟🥤</button>
     </div>
 
     <div class="custom-autofill">
@@ -78,18 +78,16 @@
     let editing = false, editingId = null;
     let customPresets = [];
 
-    // Quick autofill
-    function autofill(text) {
-      document.getElementById('orderInput').value = text;
-    }
-
-    function autofillWithMeal() {
-      let input = document.getElementById('orderInput');
-      if (!input.value.trim()) {
-        alert('Enter text first');
-        return;
+    // Append item to order input (comma separated)
+    function appendToOrderInput(item) {
+      const input = document.getElementById('orderInput');
+      let current = input.value.trim();
+      if (current) {
+        // Check if item already exists? Optional: allow duplicates
+        input.value = current + ', ' + item;
+      } else {
+        input.value = item;
       }
-      input.value += ' + Meal 🍟🥤';
     }
 
     // Add a custom preset and save to Firestore
@@ -115,7 +113,7 @@
         b.innerText = txt;
         b.classList.add('autofill-custom');
         b.style.background = '#ffc107';
-        b.onclick = () => autofill(txt);
+        b.onclick = () => appendToOrderInput(txt);
         div.appendChild(b);
       });
     }
@@ -231,7 +229,7 @@
       let batch = db.batch();
 
       try {
-        items.forEach((item, idx) => {
+        items.forEach((item) => {
           maxId++;
           // Use fixed price if exists, otherwise manual price, else 0 (invalid)
           let price = fixedPrices[item] ?? manualPrice ?? 0;
@@ -259,7 +257,7 @@
       await loadCustomPresets();
     }
 
-    init();
+    window.onload = init;
   </script>
 </body>
 </html>
