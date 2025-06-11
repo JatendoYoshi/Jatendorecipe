@@ -2,56 +2,42 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>BoroBurgers - Local Order Manager (Firebase Sync)</title>
+  <title>BoroBurgers - Multi-Item Order Manager</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body { font-family: Arial, sans-serif; background: #f8f9fa; margin: 20px; text-align: center; }
     .container { max-width: 600px; margin: auto; background: white; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1); border-radius: 8px; }
-    h2, h4 { color: #007bff; }
     input, button { margin: 5px; padding: 10px; font-size: 16px; border-radius: 5px; }
     input { width: calc(50% - 20px); border: 1px solid #ddd; }
     button { cursor: pointer; background: #007bff; color: white; border: none; }
-    .autofill-buttons button { background: #28a745; }
     ul { list-style: none; padding: 0; text-align: left; }
-    li { background: #ececec; margin: 5px 0; padding: 10px; display: flex; justify-content: space-between; border-radius: 5px; align-items: center; }
-    .custom-autofill { margin: 15px 0; }
-    .custom-autofill input { width: auto; }
-    .price-section { margin-top: 20px; }
-    .order-buttons button { margin-left: 5px; }
+    li { background: #ececec; margin: 5px 0; padding: 10px; border-radius: 5px; }
+    .autofill-buttons button, .order-buttons button { background: #28a745; margin: 2px; }
   </style>
-
-  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
   <div class="container">
-    <h2>BoroBurgers Order Manager (Firebase Sync)</h2>
-    <input id="orderInput" placeholder="Order Details" />
+    <h2>BoroBurgers - Multi-Item Order Manager</h2>
+    <input id="orderInput" placeholder="Item Name" />
     <input id="orderPrice" type="number" step="0.01" placeholder="Price (£)" />
-    <button onclick="submitOrder()">Submit Order</button>
+    <button onclick="addItemToOrder()">+ Add Item</button>
+    <ul id="currentItemsList"></ul>
+    <button onclick="submitOrder()">✅ Submit Order</button>
 
     <div class="autofill-buttons">
-      <h4>Quick Fill:</h4>
-      <button onclick="autofill('The Classic')">The Classic</button>
-      <button onclick="autofill('The Serbian Burger')">The Serbian Burger</button>
-      <button onclick="autofill('The BigMak')">The BigMak</button>
-      <button onclick="autofillWithMeal()">Meal + 🍟🥤</button>
+      <h4>Quick Fill</h4>
+      <button onclick="autofill('The Classic', 5.00)">The Classic</button>
+      <button onclick="autofill('The Serbian Burger', 6.50)">The Serbian Burger</button>
+      <button onclick="autofill('The BigMak', 7.00)">The BigMak</button>
+      <button onclick="autofill('Meal + 🍟🥤', 3.50)">Meal + 🍟🥤</button>
     </div>
 
-    <div class="custom-autofill">
-      <h4>Add Custom Autofill:</h4>
-      <input id="customOrder" placeholder="Preset order" />
-      <button onclick="addCustom()">Add</button>
-    </div>
-
+    <h4>All Orders</h4>
     <ul id="orderList"></ul>
-
-    <div class="price-section">
-      <h4>Total: £<span id="totalPrice">0.00</span></h4>
-      <!-- Discount button removed -->
-      <button onclick="resetAll()" style="background:#dc3545;">Reset All</button>
-    </div>
+    <h4>Total: £<span id="totalPrice">0.00</span></h4>
+    <button onclick="resetAll()" style="background:#dc3545;">Reset All</button>
   </div>
 
   <script>
@@ -59,7 +45,7 @@
       apiKey: "AIzaSyAY5H-Dg0i3ymmkSi1t-Jyx5Qh4zu35NPs",
       authDomain: "order-management-system-ff94c.firebaseapp.com",
       projectId: "order-management-system-ff94c",
-      storageBucket: "order-management-system-ff94c.firebasestorage.app",
+      storageBucket: "order-management-system-ff94c.appspot.com",
       messagingSenderId: "439546269004",
       appId: "1:439546269004:web:294d4371d83285335a93e9",
       measurementId: "G-JMYBVW5M0Q"
@@ -67,184 +53,100 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Map menu items to fixed prices
-    const fixedPrices = {
-      "The Classic": 5.00,
-      "The Serbian Burger": 6.50,
-      "The BigMak": 7.00,
-      "Meal + 🍟🥤": 3.50
-    };
-
+    let currentItems = [];
     let orders = [];
-    let editing = false, editingId = null;
-    let customPresets = [];
 
-    // Quick autofill with auto price set
-    function autofill(text) {
-      document.getElementById('orderInput').value = text;
-      if (fixedPrices.hasOwnProperty(text)) {
-        document.getElementById('orderPrice').value = fixedPrices[text].toFixed(2);
-      } else {
-        document.getElementById('orderPrice').value = '';
-      }
+    function autofill(name, price) {
+      document.getElementById('orderInput').value = name;
+      document.getElementById('orderPrice').value = price.toFixed(2);
     }
 
-    function autofillWithMeal() {
-      let input = document.getElementById('orderInput');
-      if (!input.value.trim()) {
-        alert('Enter text first');
+    function addItemToOrder() {
+      const name = document.getElementById('orderInput').value.trim();
+      const price = parseFloat(document.getElementById('orderPrice').value);
+
+      if (!name || isNaN(price) || price <= 0) {
+        alert("Please provide valid item name and price.");
         return;
       }
-      input.value += ' + Meal 🍟🥤';
 
-      // Calculate combined price (base + meal)
-      let baseItem = input.value.replace(' + Meal 🍟🥤', '');
-      let basePrice = fixedPrices[baseItem] || 0;
-      let mealPrice = fixedPrices['Meal + 🍟🥤'] || 0;
-
-      document.getElementById('orderPrice').value = (basePrice + mealPrice).toFixed(2);
+      currentItems.push({ name, price });
+      document.getElementById('orderInput').value = '';
+      document.getElementById('orderPrice').value = '';
+      renderCurrentItems();
     }
 
-    // Add a custom preset and save to Firestore
-    async function addCustom() {
-      let txt = document.getElementById('customOrder').value.trim();
-      if (!txt) {
-        alert('Cannot be empty');
-        return;
-      }
-      await db.collection('customPresets').add({ text: txt });
-      document.getElementById('customOrder').value = '';
-      await loadCustomPresets();
-    }
-
-    // Build custom buttons from Firestore data
-    function buildCustomButtons() {
-      const div = document.querySelector('.autofill-buttons');
-      div.querySelectorAll('.autofill-custom').forEach(b => b.remove());
-
-      customPresets.forEach(doc => {
-        let txt = doc.text;
-        let b = document.createElement('button');
-        b.innerText = txt;
-        b.classList.add('autofill-custom');
-        b.style.background = '#ffc107';
-        b.onclick = () => autofill(txt);
-        div.appendChild(b);
+    function renderCurrentItems() {
+      const ul = document.getElementById('currentItemsList');
+      ul.innerHTML = '';
+      currentItems.forEach((item, index) => {
+        const li = document.createElement('li');
+        li.innerText = `${item.name} (£${item.price.toFixed(2)})`;
+        ul.appendChild(li);
       });
     }
 
-    // Load custom presets from Firestore
-    async function loadCustomPresets() {
-      const snapshot = await db.collection('customPresets').get();
-      customPresets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      buildCustomButtons();
+    async function submitOrder() {
+      if (currentItems.length === 0) {
+        alert("Add at least one item to submit.");
+        return;
+      }
+
+      let maxId = 0;
+      if (orders.length > 0) {
+        maxId = Math.max(...orders.map(o => parseInt(o.id)));
+      }
+      const newId = (maxId + 1).toString();
+
+      await db.collection('orders').doc(newId).set({
+        id: newId,
+        items: currentItems,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      currentItems = [];
+      renderCurrentItems();
+      await loadOrders();
     }
 
-    // Reset all data in Firestore collections
-    async function resetAll() {
-      if (!confirm('Delete ALL orders and presets?')) return;
-
-      const ordersSnapshot = await db.collection('orders').get();
-      const ordersBatch = db.batch();
-      ordersSnapshot.forEach(doc => ordersBatch.delete(doc.ref));
-      await ordersBatch.commit();
-
-      const presetsSnapshot = await db.collection('customPresets').get();
-      const presetsBatch = db.batch();
-      presetsSnapshot.forEach(doc => presetsBatch.delete(doc.ref));
-      await presetsBatch.commit();
-
-      orders = [];
-      customPresets = [];
-      editing = false; editingId = null;
-
-      renderOrders();
-      buildCustomButtons();
-    }
-
-    // Load orders from Firestore and render
     async function loadOrders() {
-      const snapshot = await db.collection('orders').orderBy('id').get();
-      orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const snapshot = await db.collection('orders').orderBy("id").get();
+      orders = snapshot.docs.map(doc => doc.data());
       renderOrders();
     }
 
-    // Render orders list and total price
     function renderOrders() {
       const ul = document.getElementById('orderList');
       ul.innerHTML = '';
-
       let total = 0;
-      orders.forEach(o => {
-        let li = document.createElement('li');
-        li.innerHTML = `#${o.id} - ${o.item} (£${o.price.toFixed(2)})`;
 
-        let btns = document.createElement('span');
-        btns.classList.add('order-buttons');
-
-        let eB = document.createElement('button');
-        eB.innerText = 'Edit';
-        eB.onclick = () => startEdit(o.id);
-
-        let dB = document.createElement('button');
-        dB.innerText = 'Delete';
-        dB.onclick = () => deleteOrder(o.id);
-
-        btns.append(eB, dB);
-        li.appendChild(btns);
+      orders.sort((a, b) => parseInt(a.id) - parseInt(b.id));
+      orders.forEach(order => {
+        const li = document.createElement('li');
+        let itemList = order.items.map(i => `${i.name} (£${i.price.toFixed(2)})`).join(", ");
+        let orderTotal = order.items.reduce((sum, i) => sum + i.price, 0);
+        total += orderTotal;
+        li.innerText = `#${order.id}: ${itemList} — Total: £${orderTotal.toFixed(2)}`;
         ul.appendChild(li);
-
-        total += o.price;
       });
 
       document.getElementById('totalPrice').innerText = total.toFixed(2);
     }
 
-    // Delete order from Firestore
-    async function deleteOrder(id) {
-      await db.collection('orders').doc(id).delete();
-      await loadOrders();
-    }
+    async function resetAll() {
+      if (!confirm("Are you sure you want to delete ALL orders?")) return;
 
-    // Start editing order
-    function startEdit(id) {
-      let o = orders.find(x => x.id === id);
-      if (!o) return;
-      document.getElementById('orderInput').value = o.item;
-      document.getElementById('orderPrice').value = o.price;
-      editing = true;
-      editingId = id;
-    }
-
-    // Submit order to Firestore
-    async function submitOrder() {
-      let item = document.getElementById('orderInput').value.trim();
-      let price = parseFloat(document.getElementById('orderPrice').value);
-      if (!item || isNaN(price) || price <= 0) {
-        alert('Valid input needed');
-        return;
-      }
-
-      if (editing) {
-        await db.collection('orders').doc(editingId).update({ item, price });
-        editing = false;
-        editingId = null;
-      } else {
-        let maxId = 0;
-        if (orders.length > 0) {
-          maxId = Math.max(...orders.map(o => Number(o.id)));
-        }
-        let newId = (maxId + 1).toString();
-
-        await db.collection('orders').doc(newId).set({ id: newId, item, price });
-      }
-      document.getElementById('orderInput').value = '';
-      document.getElementById('orderPrice').value = '';
-      await loadOrders();
+      const snapshot = await db.collection('orders').get();
+      const batch = db.batch();
+      snapshot.forEach(doc => batch.delete(doc.ref));
+      await batch.commit();
+      orders = [];
+      currentItems = [];
+      renderOrders();
+      renderCurrentItems();
     }
 
     window.onload = async () => {
-      await loadCustomPresets();
       await loadOrders();
     };
   </script>
