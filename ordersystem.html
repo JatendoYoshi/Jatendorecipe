@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BoroBurgers Orders</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f8f9fa;
+      margin: 20px;
+      text-align: center;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      border-radius: 8px;
+    }
+    h2, h4 {
+      color: #007bff;
+      margin-top: 0;
+    }
+    input, button {
+      margin: 5px;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 5px;
+    }
+    input {
+      width: calc(50% - 20px);
+      border: 1px solid #ddd;
+    }
+    button {
+      cursor: pointer;
+      background: #007bff;
+      color: white;
+      border: none;
+    }
+    .autofill-buttons button {
+      background: #28a745;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+      text-align: left;
+    }
+    li {
+      background: #ececec;
+      margin: 5px 0;
+      padding: 10px;
+      display: flex;
+      justify-content: space-between;
+      border-radius: 5px;
+    }
+    .custom-autofill {
+      margin: 15px 0;
+    }
+    .custom-autofill input {
+      width: auto;
+    }
+    .price-section {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>BoroBurgers Order Management</h2>
+    <input type="text" id="orderInput" placeholder="Enter order details" />
+    <input type="number" id="orderPrice" placeholder="Set price (£)" />
+    <button onclick="addOrder()">Add Order</button>
+
+    <div class="autofill-buttons">
+      <h4>Quick Fill Options:</h4>
+      <button onclick="autofill('The Classic')">The Classic</button>
+      <button onclick="autofill('The Serbian Burger')">The Serbian Burger</button>
+      <button onclick="autofill('The BigMak')">The BigMak</button>
+      <button onclick="autofillWithMeal()">Meal + 🍟🥤</button>
+    </div>
+
+    <div class="custom-autofill">
+      <h4>Customize Your Own Autofill:</h4>
+      <input type="text" id="customOrder" placeholder="Enter preset order" />
+      <button onclick="addCustomAutofill()">Add Custom Button</button>
+    </div>
+
+    <ul id="orderList"></ul>
+
+    <div class="price-section">
+      <h4>Total Price: £<span id="totalPrice">0.00</span></h4>
+      <button onclick="applyReferral()">Referral Code (10% Off)</button>
+    </div>
+  </div>
+
+  <script>
+    const backendURL = "https://boroburgersorders.onrender.com";
+    let orderCounter = parseInt(localStorage.getItem('orderCounter') || '1', 10);
+    let totalPrice = 0.00;
+
+    function autofill(text) {
+      document.getElementById('orderInput').value = text;
+    }
+
+    function autofillWithMeal() {
+      const input = document.getElementById('orderInput');
+      if (input.value.trim() === '') {
+        alert("Enter an order first before adding a meal!");
+      } else {
+        input.value += " + Meal 🍟🥤";
+      }
+    }
+
+    function addCustomAutofill() {
+      const customOrder = document.getElementById('customOrder').value.trim();
+      if (!customOrder) {
+        alert("Custom order cannot be empty!");
+        return;
+      }
+      const btn = document.createElement('button');
+      btn.innerText = customOrder;
+      btn.style.background = "#ffc107";
+      btn.onclick = () => autofill(customOrder);
+      document.querySelector('.autofill-buttons').appendChild(btn);
+
+      // store in localStorage
+      const arr = JSON.parse(localStorage.getItem('customOrders') || '[]');
+      arr.push(customOrder);
+      localStorage.setItem('customOrders', JSON.stringify(arr));
+      document.getElementById('customOrder').value = '';
+    }
+
+    function loadCustomAutofillButtons() {
+      JSON.parse(localStorage.getItem('customOrders') || '[]').forEach(text => {
+        const btn = document.createElement('button');
+        btn.innerText = text;
+        btn.style.background = "#ffc107";
+        btn.onclick = () => autofill(text);
+        document.querySelector('.autofill-buttons').appendChild(btn);
+      });
+    }
+
+    async function fetchOrders() {
+      try {
+        const res = await fetch(`${backendURL}/orders`);
+        const data = await res.json();
+        totalPrice = data.reduce((sum, o) => sum + o.price, 0.00);
+        document.getElementById('totalPrice').innerText = totalPrice.toFixed(2);
+
+        const list = document.getElementById('orderList');
+        list.innerHTML = data.map(o =>
+          `<li>#${o.id} - ${o.item} (£${o.price.toFixed(2)}) 
+            <button onclick="deleteOrder(${o.id}, ${o.price.toFixed(2)})">Delete</button>
+          </li>`
+        ).join('');
+      } catch (e) {
+        alert("Failed to fetch orders.");
+      }
+    }
+
+    async function addOrder() {
+      const item = document.getElementById('orderInput').value.trim();
+      const price = parseFloat(document.getElementById('orderPrice').value);
+      if (!item || isNaN(price) || price <= 0) {
+        alert("Please enter valid order and price!");
+        return;
+      }
+      const newOrder = { id: orderCounter++, item, price };
+      localStorage.setItem('orderCounter', orderCounter);
+
+      try {
+        const res = await fetch(`${backendURL}/orders`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newOrder)
+        });
+        if (!res.ok) throw new Error("Server error");
+        document.getElementById('orderInput').value = '';
+        document.getElementById('orderPrice').value = '';
+        fetchOrders();
+      } catch {
+        alert("Failed to add order.");
+      }
+    }
+
+    async function deleteOrder(id, price) {
+      try {
+        await fetch(`${backendURL}/orders/${id}`, { method: 'DELETE' });
+        fetchOrders();
+      } catch {
+        alert("Failed to delete order.");
+      }
+    }
+
+    function applyReferral() {
+      totalPrice *= 0.9;
+      document.getElementById('totalPrice').innerText = totalPrice.toFixed(2);
+      alert("Referral code applied! 10% Discount!");
+    }
+
+    window.onload = () => {
+      loadCustomAutofillButtons();
+      fetchOrders();
+    };
+  </script>
+</body>
+</html>
