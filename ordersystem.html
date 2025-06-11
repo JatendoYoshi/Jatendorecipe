@@ -162,7 +162,8 @@
             </span>
           </li>`
         ).join('');
-      } catch {
+      } catch (e) {
+        console.error("Fetch failed:", e);
         alert("Failed to fetch orders.");
       }
     }
@@ -175,7 +176,6 @@
       }
 
       if (isEditing) {
-        // Update order
         try {
           await fetch(`${backendURL}/orders/${editingId}`, {
             method: 'PUT',
@@ -185,11 +185,11 @@
           isEditing = false;
           editingId = null;
           fetchOrders();
-        } catch {
+        } catch (e) {
+          console.error("Edit order failed:", e);
           alert("Failed to update order.");
         }
       } else {
-        // New order
         const newOrder = { id: orderCounter++, item, price };
         localStorage.setItem('orderCounter', orderCounter);
         try {
@@ -198,10 +198,11 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(newOrder)
           });
-          if (!res.ok) throw new Error("Server error");
+          if (!res.ok) throw new Error(`Status: ${res.status}`);
           fetchOrders();
-        } catch {
-          alert("Failed to add order.");
+        } catch (e) {
+          console.error("Add order failed:", e);
+          alert("Failed to add order. See console for details.");
         }
       }
 
@@ -221,7 +222,8 @@
       try {
         await fetch(`${backendURL}/orders/${id}`, { method: 'DELETE' });
         fetchOrders();
-      } catch {
+      } catch (e) {
+        console.error("Delete failed:", e);
         alert("Failed to delete order.");
       }
     }
@@ -249,7 +251,8 @@
         referralApplied = false;
         totalPrice = 0;
         fetchOrders();
-      } catch {
+      } catch (e) {
+        console.error("Reset failed:", e);
         alert("Failed to reset orders.");
       }
     }
