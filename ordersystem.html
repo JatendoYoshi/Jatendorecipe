@@ -101,7 +101,6 @@
 
   <script>
     const backendURL = "https://boroburgersorders.onrender.com";
-    let orderCounter = parseInt(localStorage.getItem('orderCounter') || '1', 10);
     let totalPrice = 0.00;
     let isEditing = false;
     let editingId = null;
@@ -162,8 +161,8 @@
             </span>
           </li>`
         ).join('');
-      } catch (e) {
-        console.error("Fetch failed:", e);
+      } catch (err) {
+        console.error("Error fetching orders:", err);
         alert("Failed to fetch orders.");
       }
     }
@@ -180,7 +179,7 @@
           await fetch(`${backendURL}/orders/${editingId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: editingId, item, price })
+            body: JSON.stringify({ item, price })
           });
           isEditing = false;
           editingId = null;
@@ -190,13 +189,11 @@
           alert("Failed to update order.");
         }
       } else {
-        const newOrder = { id: orderCounter++, item, price };
-        localStorage.setItem('orderCounter', orderCounter);
         try {
           const res = await fetch(`${backendURL}/orders`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newOrder)
+            body: JSON.stringify({ item, price }) // ← no ID sent
           });
           if (!res.ok) throw new Error(`Status: ${res.status}`);
           fetchOrders();
@@ -223,7 +220,7 @@
         await fetch(`${backendURL}/orders/${id}`, { method: 'DELETE' });
         fetchOrders();
       } catch (e) {
-        console.error("Delete failed:", e);
+        console.error("Delete order failed:", e);
         alert("Failed to delete order.");
       }
     }
@@ -245,14 +242,12 @@
         for (let o of data) {
           await fetch(`${backendURL}/orders/${o.id}`, { method: 'DELETE' });
         }
-        orderCounter = 1;
-        localStorage.setItem('orderCounter', '1');
         localStorage.removeItem('referralApplied');
         referralApplied = false;
         totalPrice = 0;
         fetchOrders();
       } catch (e) {
-        console.error("Reset failed:", e);
+        console.error("Reset orders failed:", e);
         alert("Failed to reset orders.");
       }
     }
