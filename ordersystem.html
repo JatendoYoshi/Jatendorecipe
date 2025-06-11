@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>BoroBurgers - Firebase Sync (Multiple Items with Accumulative Quickfill)</title>
+  <title>BoroBurgers - Multiple Items in One Order</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body { font-family: Arial, sans-serif; background: #f8f9fa; margin: 20px; text-align: center; }
@@ -26,9 +26,8 @@
 </head>
 <body>
   <div class="container">
-    <h2>BoroBurgers Order Manager (Firebase Sync)</h2>
+    <h2>BoroBurgers Order Manager (Multiple Items per Order)</h2>
     <input id="orderInput" placeholder="Order Details (comma separated)" />
-    <input id="orderPrice" type="number" step="0.01" placeholder="Override Price (£) - optional" />
     <button onclick="submitOrder()">Submit Order</button>
 
     <div class="autofill-buttons">
@@ -48,7 +47,7 @@
     <ul id="orderList"></ul>
 
     <div class="price-section">
-      <h4>Total: £<span id="totalPrice">0.00</span></h4>
+      <h4>Total across orders: £<span id="totalPrice">0.00</span></h4>
       <button onclick="resetAll()" style="background:#dc3545;">Reset All</button>
     </div>
   </div>
@@ -83,7 +82,6 @@
       const input = document.getElementById('orderInput');
       let current = input.value.trim();
       if (current) {
-        // Check if item already exists? Optional: allow duplicates
         input.value = current + ', ' + item;
       } else {
         input.value = item;
@@ -163,8 +161,9 @@
 
       let total = 0;
       orders.forEach(o => {
+        let itemsText = o.items.map(i => `${i.name} (£${i.price.toFixed(2)})`).join(', ');
         let li = document.createElement('li');
-        li.innerHTML = `#${o.id} - ${o.item} (£${o.price.toFixed(2)})`;
+        li.innerHTML = `#${o.id} - ${itemsText} <strong>Total: £${o.totalPrice.toFixed(2)}</strong>`;
 
         let btns = document.createElement('span');
         btns.classList.add('order-buttons');
@@ -181,7 +180,7 @@
         li.appendChild(btns);
         ul.appendChild(li);
 
-        total += o.price;
+        total += o.totalPrice;
       });
 
       document.getElementById('totalPrice').innerText = total.toFixed(2);
@@ -197,16 +196,15 @@
     function startEdit(id) {
       let o = orders.find(x => x.id === id);
       if (!o) return;
-      document.getElementById('orderInput').value = o.item;
-      document.getElementById('orderPrice').value = o.price;
+      let itemsString = o.items.map(i => i.name).join(', ');
+      document.getElementById('orderInput').value = itemsString;
       editing = true;
       editingId = id;
     }
 
-    // Submit order to Firestore supporting multiple items at once
+    // Submit order to Firestore supporting multiple items in one order document
     async function submitOrder() {
       let itemsText = document.getElementById('orderInput').value.trim();
-      let manualPrice = parseFloat(document.getElementById('orderPrice').value);
 
       if (!itemsText) {
         alert('Enter at least one item.');
@@ -219,42 +217,50 @@
         return;
       }
 
+      let itemsWithPrices = [];
+
+      for (let item of items) {
+        let price = fixedPrices[item];
+        if (price === undefined) {
+          alert(`Price for "${item}" not found. Please add it as a custom preset with a price.`);
+          return;
+        }
+        itemsWithPrices.push({ name: item, price });
+      }
+
+      // Calculate total price for the order
+      let totalPrice = itemsWithPrices.reduce((sum, i) => sum + i.price, 0);
+
       if (editing) {
-        alert('Editing multiple items at once is not supported. Please save or cancel current edit first.');
-        return;
-      }
-
-      // Assign next numeric ID to each new item
-      let maxId = orders.length > 0 ? Math.max(...orders.map(o => Number(o.id))) : 0;
-      let batch = db.batch();
-
-      try {
-        items.forEach((item) => {
-          maxId++;
-          // Use fixed price if exists, otherwise manual price, else 0 (invalid)
-          let price = fixedPrices[item] ?? manualPrice ?? 0;
-          if (price <= 0) {
-            alert(`Price for "${item}" is invalid or missing.`);
-            throw new Error(`Invalid price for ${item}`);
-          }
-          let docRef = db.collection('orders').doc(maxId.toString());
-          batch.set(docRef, { id: maxId.toString(), item, price });
+        await db.collection('orders').doc(editingId).update({
+          items: itemsWithPrices,
+          totalPrice
         });
-      } catch (e) {
-        return; // Stop if error
-      }
+        editing = false;
+        editingId = null;
+      } else {
+        // Assign next numeric ID
+        let maxId = 0;
+        if (orders.length > 0) {
+          maxId = Math.max(...orders.map(o => Number(o.id)));
+        }
+        let newId = (maxId + 1).toString();
 
-      await batch.commit();
+        await db.collection('orders').doc(newId).set({
+          id: newId,
+          items: itemsWithPrices,
+          totalPrice
+        });
+      }
 
       document.getElementById('orderInput').value = '';
-      document.getElementById('orderPrice').value = '';
       await loadOrders();
     }
 
     // Initialize app
     async function init() {
-      await loadOrders();
       await loadCustomPresets();
+      await loadOrders();
     }
 
     window.onload = init;
