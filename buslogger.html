@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bus Ride Logger</title>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-blue-100 to-purple-200 min-h-screen p-6">
+  <div class="max-w-3xl mx-auto space-y-6">
+    <h1 class="text-4xl font-bold text-center text-blue-900">🚌 Bus Ride Logger</h1>
+
+    <form id="rideForm" class="bg-white p-6 rounded-2xl shadow space-y-4">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <select id="route" required class="p-2 border rounded">
+          <option value="">Select Route</option>
+          <option>501</option>
+          <option>22</option>
+          <option>320</option>
+          <option>45A</option>
+          <option>11B</option>
+        </select>
+        <select id="fleet" required class="p-2 border rounded">
+          <option value="">Select Fleet</option>
+          <option>1234</option>
+          <option>5678</option>
+          <option>9101</option>
+          <option>1213</option>
+          <option>1415</option>
+        </select>
+        <input type="date" id="date" required class="p-2 border rounded"/>
+      </div>
+      <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded w-full">
+        ➕ Add Entry
+      </button>
+    </form>
+
+    <!-- Search and actions -->
+    <div class="flex flex-col sm:flex-row justify-between items-center gap-3">
+      <div class="flex items-center gap-2">
+        <i data-lucide="search" class="text-blue-700 w-5 h-5"></i>
+        <input id="search" type="text" placeholder="Search route, fleet, or date"
+          class="p-2 border rounded w-64" />
+      </div>
+      <div class="flex gap-3">
+        <button onclick="exportEntries()" class="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded">
+          <i data-lucide="download" class="w-4 h-4"></i> Export
+        </button>
+        <button onclick="clearEntries()" class="flex items-center gap-1 bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded">
+          <i data-lucide="trash-2" class="w-4 h-4"></i> Clear
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div id="stats" class="bg-white rounded-xl shadow p-4 flex justify-between text-blue-900 font-medium">
+      <div>Total Rides: <span id="rideCount" class="font-bold">0</span></div>
+      <div>Most Frequent Route: <span id="topRoute" class="font-bold">N/A</span></div>
+    </div>
+
+    <!-- Entries -->
+    <ul id="entryList" class="space-y-2"></ul>
+    <p id="noMatch" class="text-center text-gray-600 mt-4 hidden">No matching entries found.</p>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    const entries = [];
+    const form = document.getElementById("rideForm");
+    const entryList = document.getElementById("entryList");
+    const rideCount = document.getElementById("rideCount");
+    const topRoute = document.getElementById("topRoute");
+    const searchInput = document.getElementById("search");
+    const noMatch = document.getElementById("noMatch");
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const route = document.getElementById("route").value;
+      const fleet = document.getElementById("fleet").value;
+      const date = document.getElementById("date").value;
+      entries.push({ route, fleet, date });
+      form.reset();
+      updateUI();
+    });
+
+    searchInput.addEventListener("input", updateUI);
+
+    function updateUI() {
+      const search = searchInput.value.toLowerCase();
+      entryList.innerHTML = "";
+
+      const filtered = entries.filter(
+        e =>
+          e.route.toLowerCase().includes(search) ||
+          e.fleet.toLowerCase().includes(search) ||
+          e.date.includes(search)
+      );
+
+      filtered.forEach(e => {
+        const li = document.createElement("li");
+        li.className = "bg-white p-3 rounded-lg shadow flex justify-between";
+        li.innerHTML = `
+          <span>📍 Route: <strong>${e.route}</strong> | 🚌 Fleet: <strong>${e.fleet}</strong></span>
+          <span>📅 ${e.date}</span>
+        `;
+        entryList.appendChild(li);
+      });
+
+      rideCount.textContent = entries.length;
+
+      const freq = {};
+      entries.forEach(e => freq[e.route] = (freq[e.route] || 0) + 1);
+      const sorted = Object.entries(freq).sort((a, b) => b[1] - a[1]);
+      topRoute.textContent = sorted[0]?.[0] || "N/A";
+
+      noMatch.classList.toggle("hidden", filtered.length > 0);
+    }
+
+    function exportEntries() {
+      const blob = new Blob([JSON.stringify(entries, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "bus-log.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function clearEntries() {
+      if (confirm("Are you sure you want to clear all entries?")) {
+        entries.length = 0;
+        updateUI();
+      }
+    }
+  </script>
+</body>
+</html>
