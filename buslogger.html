@@ -9,7 +9,7 @@
 </head>
 <body class="bg-gradient-to-br from-blue-100 to-purple-200 min-h-screen p-6">
   <div class="max-w-3xl mx-auto space-y-6">
-    <h1 class="text-4xl font-bold text-center text-blue-900"> Bus Ride Logger</h1>
+    <h1 class="text-4xl font-bold text-center text-blue-900">🚌 Bus Ride Logger</h1>
 
     <form id="rideForm" class="bg-white p-6 rounded-2xl shadow space-y-4">
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -80,10 +80,8 @@
           <option>Tram</option>
         </select>
 
-        <!-- Changed from <select> to <input> for fleet -->
         <input type="number" id="fleet" placeholder="Enter Fleet Number" required class="p-2 border rounded"/>
-
-        <input type="date" id="date" required class="p-2 border rounded"/>
+        <input type="date" id="date" class="p-2 border rounded"/>
       </div>
       <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded w-full">
         ➕ Add Entry
@@ -133,7 +131,14 @@
       e.preventDefault();
       const route = document.getElementById("route").value;
       const fleet = document.getElementById("fleet").value;
-      const date = document.getElementById("date").value;
+      let date = document.getElementById("date").value;
+
+      // If date not entered, use today's date
+      if (!date) {
+        const today = new Date();
+        date = today.toISOString().split("T")[0];
+      }
+
       entries.push({ route, fleet, date });
       form.reset();
       updateUI();
