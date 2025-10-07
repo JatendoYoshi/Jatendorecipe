@@ -34,19 +34,24 @@
     .menu-section h2 {
       border-bottom: 2px solid #ff4d00;
       padding-bottom: 5px;
+      margin-bottom: 15px;
       color: #222;
     }
 
     .menu-item {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
+      align-items: center;
       border-bottom: 1px dashed #ccc;
-      padding: 10px 0;
+      padding: 12px 0;
+    }
+
+    .menu-item:last-child {
+      border-bottom: none;
     }
 
     .menu-item h3 {
-      margin: 0 0 5px 0;
+      margin: 0 0 4px 0;
     }
 
     .menu-item p {
@@ -58,7 +63,8 @@
     .price {
       font-weight: bold;
       color: #ff4d00;
-      white-space: nowrap;
+      text-align: right;
+      min-width: 80px; /* Keeps prices aligned */
     }
   </style>
 </head>
@@ -82,15 +88,16 @@
         <div class="price">£3.49</div>
       </div>
 
-            <div class="menu-item">
+      <div class="menu-item">
         <div>
-          <h3>The BigMak</h3>
-          <p>Brioche bun with beef patty, lettuce, ketchup/mustard.</p>
+          <h3>Classic Cheeseburger</h3>
+          <p>Juicy beef patty with melted cheese and fresh lettuce.</p>
         </div>
-        <div class="price">£3.49</div>
+        <div class="price">£3.79</div>
       </div>
+    </div>
 
-      <!-- Meal Deal Prices Section -->
+    <!-- Meal Deal Prices Section -->
     <div class="menu-section">
       <h2>Pick Your Combo!</h2>
       <p>Customise your meals by adding a touch of variety to it!</p>
@@ -98,7 +105,7 @@
       <div class="menu-item">
         <div>
           <h3>Classic Combo</h3>
-          <p>BigMak + a side of caramalised onions</p>
+          <p>BigMak + a side of caramelised onions</p>
         </div>
         <div class="price">£3.99</div>
       </div>
@@ -106,7 +113,7 @@
       <div class="menu-item">
         <div>
           <h3>Seasonal Harvest</h3>
-          <p>A Grilled Hotdog + a side of salad</p>
+          <p>Grilled Hotdog + a side of garden-fresh salad</p>
         </div>  
         <div class="price">£2.49</div>
       </div>
@@ -114,7 +121,7 @@
       <div class="menu-item">
         <div>
           <h3>The Ultimate Mix</h3>
-          <p>BigMak + 1 Grilled Hot dog + a side of salad</p>
+          <p>BigMak + Grilled Hotdog + a side of salad</p>
         </div>  
         <div class="price">£4.99</div>
       </div>
@@ -135,7 +142,7 @@
       </div>
 
       <div class="menu-item">
-        <div><h3>Caramelized Onions</h3></div>
+        <div><h3>Caramelised Onions</h3></div>
         <div class="price">£0.80</div>
       </div>
 
@@ -143,8 +150,7 @@
         <div><h3>Signature Spicy Mayo Sauce</h3></div>
         <div class="price">£0.60</div>
       </div>
-    </div>
-    
+
       <div class="menu-item">
         <div><h3>BBQ Sauce</h3></div>
         <div class="price">£0.30</div>
