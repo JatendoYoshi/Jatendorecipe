@@ -12,7 +12,12 @@
   <div class="scoreboard">
     <!-- Team A -->
     <div class="team" id="teamA">
-      <h2>Team A</h2>
+      <div class="team-header">
+        <input type="text" id="teamANameInput" value="Team A" />
+        <button onclick="updateTeamName('A')">Update Name</button>
+      </div>
+      <h2 id="teamAName">Team A</h2>
+
       <div class="score" id="scoreA">100</div>
 
       <label for="addScoreA">Add Round Score:</label>
@@ -34,7 +39,12 @@
 
     <!-- Team B -->
     <div class="team" id="teamB">
-      <h2>Team B</h2>
+      <div class="team-header">
+        <input type="text" id="teamBNameInput" value="Team B" />
+        <button onclick="updateTeamName('B')">Update Name</button>
+      </div>
+      <h2 id="teamBName">Team B</h2>
+
       <div class="score" id="scoreB">100</div>
 
       <label for="addScoreB">Add Round Score:</label>
@@ -56,5 +66,13 @@
   </div>
 
   <script src="rolltheball.js"></script>
+  <script>
+    function updateTeamName(team) {
+      const newName = document.getElementById(`team${team}NameInput`).value.trim();
+      if (newName !== "") {
+        document.getElementById(`team${team}Name`).textContent = newName;
+      }
+    }
+  </script>
 </body>
 </html>
