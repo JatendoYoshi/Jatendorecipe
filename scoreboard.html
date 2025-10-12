@@ -36,6 +36,20 @@
         </thead>
         <tbody id="itemsA"></tbody>
       </table>
+
+      <!-- Additional Prizes Section -->
+      <div class="prizes">
+        <h3>Additional Prizes</h3>
+        <div class="token-display">
+          Gold Tokens: <span id="goldA">0</span> |
+          Silver Tokens: <span id="silverA">0</span>
+        </div>
+        <div class="redeem-options">
+          <button onclick="redeemAsScore('A','gold')">Redeem Gold (+50)</button>
+          <button onclick="redeemAsScore('A','silver')">Redeem Silver (+20)</button>
+          <button onclick="redeemItem('A')">Redeem for Item</button>
+        </div>
+      </div>
     </div>
 
     <!-- Team B -->
@@ -64,17 +78,23 @@
         </thead>
         <tbody id="itemsB"></tbody>
       </table>
+
+      <!-- Additional Prizes Section -->
+      <div class="prizes">
+        <h3>Additional Prizes</h3>
+        <div class="token-display">
+          Gold Tokens: <span id="goldB">0</span> |
+          Silver Tokens: <span id="silverB">0</span>
+        </div>
+        <div class="redeem-options">
+          <button onclick="redeemAsScore('B','gold')">Redeem Gold (+50)</button>
+          <button onclick="redeemAsScore('B','silver')">Redeem Silver (+20)</button>
+          <button onclick="redeemItem('B')">Redeem for Item</button>
+        </div>
+      </div>
     </div>
   </div>
 
   <script src="rolltheball.js"></script>
-  <script>
-    function updateTeamName(team) {
-      const newName = document.getElementById(`team${team}NameInput`).value.trim();
-      if (newName !== "") {
-        document.getElementById(`team${team}Name`).textContent = newName;
-      }
-    }
-  </script>
 </body>
 </html>

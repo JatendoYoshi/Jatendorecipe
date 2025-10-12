@@ -82,3 +82,31 @@ button:hover {
 .team-header {
   margin-bottom: 10px;
 }
+
+.prizes {
+  margin-top: 20px;
+  background: #e6ffe6;
+  padding: 10px;
+  border-radius: 12px;
+  box-shadow: inset 0 0 5px #aaa;
+}
+
+.prizes h3 {
+  margin-bottom: 8px;
+}
+
+.token-display {
+  font-size: 1em;
+  margin-bottom: 10px;
+}
+
+.redeem-options button {
+  background: #4caf50;
+  margin: 5px;
+  font-family: "Century Gothic", sans-serif;
+}
+
+.redeem-options button:hover {
+  background: #2e7d32;
+}
+
