@@ -38,17 +38,23 @@
       </table>
 
       <!-- Additional Prizes Section -->
-      <div class="prizes">
-        <h3>Additional Prizes</h3>
-        <div class="token-display">
-          Gold Tokens: <span id="goldA">0</span> |
-          Silver Tokens: <span id="silverA">0</span>
-        </div>
-        <div class="redeem-options">
-          <button onclick="redeemAsScore('A','gold')">Redeem Gold (+50)</button>
-          <button onclick="redeemAsScore('A','silver')">Redeem Silver (+20)</button>
-          <button onclick="redeemItem('A')">Redeem for Item</button>
-        </div>
+<div class="prizes">
+  <h3>Additional Prizes</h3>
+  <div class="token-display">
+    Gold Tokens: <span id="goldA">0</span>
+    <button onclick="addToken('A','gold')">+ Add Gold</button> |
+    Silver Tokens: <span id="silverA">0</span>
+    <button onclick="addToken('A','silver')">+ Add Silver</button>
+  </div>
+  <div class="redeem-options">
+    <button onclick="redeemAsScore('A','gold')">Redeem Gold (+50)</button>
+    <button onclick="redeemAsScore('A','silver')">Redeem Silver (+20)</button>
+    <button onclick="redeemItem('A')">Redeem for Item</button>
+  </div>
+</div>
+</div>
+</div>
+
       </div>
     </div>
 
@@ -80,18 +86,21 @@
       </table>
 
       <!-- Additional Prizes Section -->
-      <div class="prizes">
-        <h3>Additional Prizes</h3>
-        <div class="token-display">
-          Gold Tokens: <span id="goldB">0</span> |
-          Silver Tokens: <span id="silverB">0</span>
-        </div>
-        <div class="redeem-options">
-          <button onclick="redeemAsScore('B','gold')">Redeem Gold (+50)</button>
-          <button onclick="redeemAsScore('B','silver')">Redeem Silver (+20)</button>
-          <button onclick="redeemItem('B')">Redeem for Item</button>
-        </div>
-      </div>
+<div class="prizes">
+  <h3>Additional Prizes</h3>
+  <div class="token-display">
+    Gold Tokens: <span id="goldB">0</span>
+    <button onclick="addToken('B','gold')">+ Add Gold</button> |
+    Silver Tokens: <span id="silverB">0</span>
+    <button onclick="addToken('B','silver')">+ Add Silver</button>
+  </div>
+  <div class="redeem-options">
+    <button onclick="redeemAsScore('B','gold')">Redeem Gold (+50)</button>
+    <button onclick="redeemAsScore('B','silver')">Redeem Silver (+20)</button>
+    <button onclick="redeemItem('B')">Redeem for Item</button>
+  </div>
+</div>
+
     </div>
   </div>
 
