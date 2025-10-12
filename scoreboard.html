@@ -1,15 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Roll the Ball Scoreboard</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Roll the Ball — Scoreboard</title>
   <link rel="stylesheet" href="rolltheball.css" />
 </head>
 <body>
   <h1>Roll the Ball Scoreboard</h1>
 
   <div class="scoreboard">
+
     <!-- Team A -->
     <div class="team" id="teamA">
       <div class="team-header">
@@ -20,9 +21,11 @@
 
       <div class="score" id="scoreA">100</div>
 
-      <label for="addScoreA">Add Round Score:</label>
-      <input type="number" id="addScoreA" value="0" min="0" />
-      <button onclick="confirmRound('A')">Confirm Round</button>
+      <div class="round-controls">
+        <label for="addScoreA">Add Round Score:</label>
+        <input type="number" id="addScoreA" value="0" min="0" />
+        <button onclick="confirmRound('A')">Confirm Round</button>
+      </div>
 
       <table>
         <thead>
@@ -38,23 +41,22 @@
       </table>
 
       <!-- Additional Prizes Section -->
-<div class="prizes">
-  <h3>Additional Prizes</h3>
-  <div class="token-display">
-    Gold Tokens: <span id="goldA">0</span>
-    <button onclick="addToken('A','gold')">+ Add Gold</button> |
-    Silver Tokens: <span id="silverA">0</span>
-    <button onclick="addToken('A','silver')">+ Add Silver</button>
-  </div>
-  <div class="redeem-options">
-    <button onclick="redeemAsScore('A','gold')">Redeem Gold (+50)</button>
-    <button onclick="redeemAsScore('A','silver')">Redeem Silver (+20)</button>
-    <button onclick="redeemItem('A')">Redeem for Item</button>
-  </div>
-</div>
-</div>
-</div>
+      <div class="prizes">
+        <h3>Additional Prizes</h3>
 
+        <div class="token-display">
+          Gold Tokens: <span id="goldA">0</span>
+          <button onclick="addToken('A','gold')">+ Add Gold</button>
+          &nbsp;&nbsp;|&nbsp;&nbsp;
+          Silver Tokens: <span id="silverA">0</span>
+          <button onclick="addToken('A','silver')">+ Add Silver</button>
+        </div>
+
+        <div class="redeem-options">
+          <button onclick="redeemAsScore('A','gold')">Redeem Gold (+50)</button>
+          <button onclick="redeemAsScore('A','silver')">Redeem Silver (+20)</button>
+          <button onclick="redeemItem('A')">Redeem for Item</button>
+        </div>
       </div>
     </div>
 
@@ -68,9 +70,11 @@
 
       <div class="score" id="scoreB">100</div>
 
-      <label for="addScoreB">Add Round Score:</label>
-      <input type="number" id="addScoreB" value="0" min="0" />
-      <button onclick="confirmRound('B')">Confirm Round</button>
+      <div class="round-controls">
+        <label for="addScoreB">Add Round Score:</label>
+        <input type="number" id="addScoreB" value="0" min="0" />
+        <button onclick="confirmRound('B')">Confirm Round</button>
+      </div>
 
       <table>
         <thead>
@@ -86,22 +90,25 @@
       </table>
 
       <!-- Additional Prizes Section -->
-<div class="prizes">
-  <h3>Additional Prizes</h3>
-  <div class="token-display">
-    Gold Tokens: <span id="goldB">0</span>
-    <button onclick="addToken('B','gold')">+ Add Gold</button> |
-    Silver Tokens: <span id="silverB">0</span>
-    <button onclick="addToken('B','silver')">+ Add Silver</button>
-  </div>
-  <div class="redeem-options">
-    <button onclick="redeemAsScore('B','gold')">Redeem Gold (+50)</button>
-    <button onclick="redeemAsScore('B','silver')">Redeem Silver (+20)</button>
-    <button onclick="redeemItem('B')">Redeem for Item</button>
-  </div>
-</div>
+      <div class="prizes">
+        <h3>Additional Prizes</h3>
 
+        <div class="token-display">
+          Gold Tokens: <span id="goldB">0</span>
+          <button onclick="addToken('B','gold')">+ Add Gold</button>
+          &nbsp;&nbsp;|&nbsp;&nbsp;
+          Silver Tokens: <span id="silverB">0</span>
+          <button onclick="addToken('B','silver')">+ Add Silver</button>
+        </div>
+
+        <div class="redeem-options">
+          <button onclick="redeemAsScore('B','gold')">Redeem Gold (+50)</button>
+          <button onclick="redeemAsScore('B','silver')">Redeem Silver (+20)</button>
+          <button onclick="redeemItem('B')">Redeem for Item</button>
+        </div>
+      </div>
     </div>
+
   </div>
 
   <script src="rolltheball.js"></script>

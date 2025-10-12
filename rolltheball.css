@@ -1,112 +1,153 @@
+/* Fonts: Orbitron for the scoreboard, Century Gothic for everything else */
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap');
 
-body {
-  background-color: #ccffcc;
-  font-family: "Century Gothic", sans-serif;
+html,body {
   margin: 0;
   padding: 0;
+  background: #ccffcc; /* light green background */
+  font-family: "Century Gothic", Arial, sans-serif;
   text-align: center;
+  color: #111;
 }
 
 h1 {
-  font-size: 2.5em;
-  margin: 20px 0;
+  margin: 18px 0;
+  font-size: 2.2rem;
 }
 
 .scoreboard {
   display: flex;
-  justify-content: space-around;
+  gap: 20px;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 16px;
   flex-wrap: wrap;
-  margin: 20px;
 }
 
 .team {
-  background: white;
-  border-radius: 20px;
-  box-shadow: 0 0 10px #555;
-  padding: 20px;
-  width: 45%;
+  background: #ffffff;
+  width: 420px;
   min-width: 320px;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+  text-align: left;
+}
+
+.team-header {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 8px;
+}
+
+.team-header input[type="text"] {
+  font-family: "Century Gothic", sans-serif;
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid #bbb;
+  width: 160px;
+}
+
+.team h2 {
+  margin: 6px 0 10px 0;
+  font-size: 1.25rem;
 }
 
 .score {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 3em;
-  background: black;
-  color: limegreen;
-  border-radius: 10px;
-  padding: 10px;
+  font-family: 'Orbitron', sans-serif; /* scoreboard font */
+  font-size: 48px;
+  background: #000;
+  color: #7CFF00;
+  padding: 6px 12px;
+  border-radius: 8px;
+  display: inline-block;
+  letter-spacing: 6px;
+  text-align: center;
+  width: calc(100% - 40px);
+  box-sizing: border-box;
+}
+
+.round-controls {
   margin: 10px 0;
-  letter-spacing: 5px;
+}
+
+.round-controls input[type="number"] {
+  width: 90px;
+  padding: 6px;
+  margin-left: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-family: "Century Gothic", sans-serif;
+}
+
+button {
+  font-family: "Century Gothic", sans-serif;
+  cursor: pointer;
+  border: none;
+  background: #4CAF50;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-left: 6px;
+}
+
+button:hover {
+  background: #3b8d3b;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 15px;
+  margin-top: 8px;
 }
 
 th, td {
-  border: 1px solid #333;
-  padding: 8px;
-  font-size: 0.9em;
+  border: 1px solid #ccc;
+  padding: 6px;
+  text-align: center;
+  font-size: 0.9rem;
 }
 
 th {
-  background: #e0ffe0;
-}
-
-input[type="number"], input[type="text"] {
-  width: 60px;
-  text-align: center;
-  margin: 5px;
-  font-family: "Century Gothic", sans-serif;
-}
-
-button {
-  background: limegreen;
-  color: white;
-  border: none;
-  padding: 8px 15px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 0.9em;
-  margin: 4px;
-  font-family: "Century Gothic", sans-serif;
-}
-
-button:hover {
-  background: #009900;
-}
-
-.team-header {
-  margin-bottom: 10px;
-}
-
-.prizes {
-  margin-top: 20px;
   background: #e6ffe6;
-  padding: 10px;
-  border-radius: 12px;
-  box-shadow: inset 0 0 5px #aaa;
+  font-weight: 700;
 }
 
-.prizes h3 {
-  margin-bottom: 8px;
+input[type="number"] {
+  text-align: center;
+  font-family: "Century Gothic", sans-serif;
+}
+
+/* Prizes area */
+.prizes {
+  margin-top: 12px;
+  background: #f3fff3;
+  padding: 8px;
+  border-radius: 8px;
 }
 
 .token-display {
-  font-size: 1em;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+}
+
+.token-display button {
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #a3d977;
+  color: #000;
+  border: 1px solid #777;
+  font-size: 0.85rem;
 }
 
 .redeem-options button {
-  background: #4caf50;
-  margin: 5px;
-  font-family: "Century Gothic", sans-serif;
+  margin: 6px 6px 4px 0;
 }
 
-.redeem-options button:hover {
-  background: #2e7d32;
+/* small screens */
+@media (max-width: 760px) {
+  .team { width: 92%; }
+  .score { font-size: 40px; }
 }
-
