@@ -1,95 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Roll the Ball Scoreboard</title>
-
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap');
-
-  body {
-    background-color: #ccffcc;
-    font-family: "Century Gothic", sans-serif;
-    margin: 0;
-    padding: 0;
-    text-align: center;
-  }
-
-  h1 {
-    font-size: 2.5em;
-    margin: 20px 0;
-  }
-
-  .scoreboard {
-    display: flex;
-    justify-content: space-around;
-    flex-wrap: wrap;
-    margin: 20px;
-  }
-
-  .team {
-    background: white;
-    border-radius: 20px;
-    box-shadow: 0 0 10px #555;
-    padding: 20px;
-    width: 45%;
-    min-width: 320px;
-  }
-
-  .score {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 3em;
-    background: black;
-    color: limegreen;
-    border-radius: 10px;
-    padding: 10px;
-    margin: 10px 0;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
-  }
-
-  th, td {
-    border: 1px solid #333;
-    padding: 8px;
-    font-size: 0.9em;
-  }
-
-  th {
-    background: #e0ffe0;
-  }
-
-  input[type="number"] {
-    width: 60px;
-    text-align: center;
-  }
-
-  button {
-    background: limegreen;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 1em;
-    margin-top: 10px;
-  }
-
-  button:hover {
-    background: #009900;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Roll the Ball Scoreboard</title>
+  <link rel="stylesheet" href="rolltheball.css" />
 </head>
 <body>
   <h1>Roll the Ball Scoreboard</h1>
+
   <div class="scoreboard">
+    <!-- Team A -->
     <div class="team" id="teamA">
       <h2>Team A</h2>
       <div class="score" id="scoreA">100</div>
+
+      <label for="addScoreA">Add Round Score:</label>
+      <input type="number" id="addScoreA" value="0" min="0" />
+      <button onclick="confirmRound('A')">Confirm Round</button>
 
       <table>
         <thead>
@@ -102,12 +30,16 @@
         </thead>
         <tbody id="itemsA"></tbody>
       </table>
-      <button onclick="confirmRound('A')">Confirm Round</button>
     </div>
 
+    <!-- Team B -->
     <div class="team" id="teamB">
       <h2>Team B</h2>
       <div class="score" id="scoreB">100</div>
+
+      <label for="addScoreB">Add Round Score:</label>
+      <input type="number" id="addScoreB" value="0" min="0" />
+      <button onclick="confirmRound('B')">Confirm Round</button>
 
       <table>
         <thead>
@@ -120,73 +52,9 @@
         </thead>
         <tbody id="itemsB"></tbody>
       </table>
-      <button onclick="confirmRound('B')">Confirm Round</button>
     </div>
   </div>
 
-<script>
-const itemsData = [
-  { name: "Large Coin", buy: 5, rent: 0, maxPlays: 25 },
-  { name: "Metal Ball", buy: 10, rent: 5, maxPlays: 10 },
-  { name: "Metal Stick", buy: 15, rent: 10, maxPlays: 8 },
-  { name: "Arrow", buy: 20, rent: 10, maxPlays: 7 },
-  { name: "Wooden Block", buy: 40, rent: 20, maxPlays: 6 },
-];
-
-let teams = {
-  A: { score: 100, items: {} },
-  B: { score: 100, items: {} }
-};
-
-function setupTables() {
-  ['A', 'B'].forEach(team => {
-    const tbody = document.getElementById('items' + team);
-    itemsData.forEach(item => {
-      teams[team].items[item.name] = { owned: 0, plays: 0 };
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td>${item.name}</td>
-        <td><input type="number" id="${team}_${item.name}_owned" value="0" min="0"></td>
-        <td id="${team}_${item.name}_plays">0</td>
-        <td>${item.maxPlays}</td>
-      `;
-      tbody.appendChild(row);
-    });
-  });
-}
-
-function confirmRound(team) {
-  const t = teams[team];
-  let deduction = 0;
-
-  itemsData.forEach(item => {
-    const ownedInput = document.getElementById(`${team}_${item.name}_owned`);
-    const owned = parseInt(ownedInput.value) || 0;
-    let itemState = t.items[item.name];
-
-    // Pay rent for owned items
-    deduction += item.rent * owned;
-
-    // Increment plays
-    itemState.plays += owned;
-
-    // Check max plays
-    if (itemState.plays >= item.maxPlays) {
-      deduction += item.buy; // repurchase
-      itemState.plays = 0;   // reset plays
-    }
-
-    document.getElementById(`${team}_${item.name}_plays`).textContent = itemState.plays;
-  });
-
-  // Deduct from score
-  t.score -= deduction;
-  if (t.score < 0) t.score = 0;
-
-  document.getElementById('score' + team).textContent = t.score;
-}
-
-setupTables();
-</script>
+  <script src="rolltheball.js"></script>
 </body>
 </html>
