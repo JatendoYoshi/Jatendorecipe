@@ -12,70 +12,70 @@ html,body {
 
 h1 {
   margin: 18px 0;
-  font-size: 2.2rem;
+  font-size: 2.4rem; /* slightly bigger for impact */
 }
 
 .scoreboard {
   display: flex;
-  gap: 20px;
+  gap: 32px; /* more space between teams */
   justify-content: center;
   align-items: flex-start;
-  padding: 16px;
+  padding: 24px; /* extra padding around the scoreboard */
   flex-wrap: wrap;
 }
 
 .team {
   background: #ffffff;
-  width: 420px;
-  min-width: 320px;
+  width: 480px; /* wider cards */
+  min-width: 360px; /* minimum width for small screens */
   border-radius: 14px;
-  padding: 16px;
+  padding: 24px; /* more padding inside each team box */
   box-shadow: 0 6px 18px rgba(0,0,0,0.12);
   text-align: left;
 }
 
 .team-header {
   display: flex;
-  gap: 8px;
+  gap: 12px;
   align-items: center;
   justify-content: flex-start;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .team-header input[type="text"] {
   font-family: "Century Gothic", sans-serif;
-  padding: 6px;
+  padding: 8px;
   border-radius: 6px;
   border: 1px solid #bbb;
-  width: 160px;
+  width: 180px;
 }
 
 .team h2 {
-  margin: 6px 0 10px 0;
-  font-size: 1.25rem;
+  margin: 6px 0 12px 0;
+  font-size: 1.35rem;
 }
 
 .score {
   font-family: 'Orbitron', sans-serif; /* scoreboard font */
-  font-size: 48px;
+  font-size: 56px; /* bigger scoreboard numbers */
   background: #000;
   color: #7CFF00;
-  padding: 6px 12px;
-  border-radius: 8px;
+  padding: 10px 16px;
+  border-radius: 10px;
   display: inline-block;
   letter-spacing: 6px;
   text-align: center;
-  width: calc(100% - 40px);
+  width: calc(100% - 48px); /* account for extra padding */
   box-sizing: border-box;
 }
 
 .round-controls {
-  margin: 10px 0;
+  margin: 14px 0;
 }
 
 .round-controls input[type="number"] {
-  width: 90px;
-  padding: 6px;
+  width: 100px; /* slightly wider input */
+  padding: 8px;
   margin-left: 8px;
   border-radius: 6px;
   border: 1px solid #ccc;
@@ -88,7 +88,7 @@ button {
   border: none;
   background: #4CAF50;
   color: white;
-  padding: 8px 12px;
+  padding: 10px 14px;
   border-radius: 8px;
   margin-left: 6px;
 }
@@ -100,14 +100,14 @@ button:hover {
 table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 8px;
+  margin-top: 12px;
 }
 
 th, td {
   border: 1px solid #ccc;
-  padding: 6px;
+  padding: 8px; /* more padding for readability */
   text-align: center;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
 }
 
 th {
@@ -122,24 +122,24 @@ input[type="number"] {
 
 /* Prizes area */
 .prizes {
-  margin-top: 12px;
+  margin-top: 16px;
   background: #f3fff3;
-  padding: 8px;
+  padding: 12px;
   border-radius: 8px;
 }
 
 .token-display {
-  margin-bottom: 8px;
-  font-size: 0.95rem;
+  margin-bottom: 12px;
+  font-size: 1rem;
 }
 
 .token-display button {
-  padding: 4px 8px;
+  padding: 6px 10px;
   border-radius: 6px;
   background: #a3d977;
   color: #000;
   border: 1px solid #777;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
 }
 
 .redeem-options button {
@@ -147,6 +147,11 @@ input[type="number"] {
 }
 
 /* small screens */
+@media (max-width: 900px) {
+  .team { width: 90%; }
+  .score { font-size: 48px; }
+}
+
 @media (max-width: 760px) {
   .team { width: 92%; }
   .score { font-size: 40px; }
