@@ -302,3 +302,34 @@ window.refundItem = refundItem;
 
 // initialize on DOM ready
 document.addEventListener("DOMContentLoaded", setupTables);
+
+function resetGame() {
+  // Reset team names
+  document.getElementById('teamAName').textContent = 'Team A';
+  document.getElementById('teamBName').textContent = 'Team B';
+  document.getElementById('teamANameInput').value = 'Team A';
+  document.getElementById('teamBNameInput').value = 'Team B';
+
+  // Reset scores
+  document.getElementById('scoreA').textContent = '100';
+  document.getElementById('scoreB').textContent = '100';
+  document.getElementById('addScoreA').value = 0;
+  document.getElementById('addScoreB').value = 0;
+
+  // Reset tokens
+  document.getElementById('goldA').textContent = '0';
+  document.getElementById('silverA').textContent = '0';
+  document.getElementById('goldB').textContent = '0';
+  document.getElementById('silverB').textContent = '0';
+
+  // Clear items tables
+  document.getElementById('itemsA').innerHTML = '';
+  document.getElementById('itemsB').innerHTML = '';
+
+  // Optionally, reset any other game state variables you have in your JS
+  if (typeof gameState !== 'undefined') {
+    gameState = {}; // reset your gameState object if exists
+  }
+
+  alert('Game has been reset!');
+}
