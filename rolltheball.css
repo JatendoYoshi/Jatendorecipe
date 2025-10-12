@@ -12,26 +12,27 @@ html,body {
 
 h1 {
   margin: 18px 0;
-  font-size: 2.4rem; /* slightly bigger for impact */
+  font-size: 2.4rem; /* slightly bigger */
 }
 
 .scoreboard {
   display: flex;
-  gap: 32px; /* more space between teams */
+  gap: 40px; /* wider gap between teams */
   justify-content: center;
   align-items: flex-start;
-  padding: 24px; /* extra padding around the scoreboard */
+  padding: 24px;
   flex-wrap: wrap;
 }
 
 .team {
   background: #ffffff;
-  width: 480px; /* wider cards */
-  min-width: 360px; /* minimum width for small screens */
+  width: 48%; /* nearly half the screen */
+  min-width: 360px;
   border-radius: 14px;
-  padding: 24px; /* more padding inside each team box */
+  padding: 24px;
   box-shadow: 0 6px 18px rgba(0,0,0,0.12);
   text-align: left;
+  box-sizing: border-box;
 }
 
 .team-header {
@@ -56,7 +57,7 @@ h1 {
 }
 
 .score {
-  font-family: 'Orbitron', sans-serif; /* scoreboard font */
+  font-family: 'Orbitron', sans-serif;
   font-size: 56px; /* bigger scoreboard numbers */
   background: #000;
   color: #7CFF00;
@@ -65,7 +66,7 @@ h1 {
   display: inline-block;
   letter-spacing: 6px;
   text-align: center;
-  width: calc(100% - 48px); /* account for extra padding */
+  width: calc(100% - 48px);
   box-sizing: border-box;
 }
 
@@ -74,7 +75,7 @@ h1 {
 }
 
 .round-controls input[type="number"] {
-  width: 100px; /* slightly wider input */
+  width: 100px;
   padding: 8px;
   margin-left: 8px;
   border-radius: 6px;
@@ -105,7 +106,7 @@ table {
 
 th, td {
   border: 1px solid #ccc;
-  padding: 8px; /* more padding for readability */
+  padding: 8px;
   text-align: center;
   font-size: 0.95rem;
 }
@@ -146,7 +147,11 @@ input[type="number"] {
   margin: 6px 6px 4px 0;
 }
 
-/* small screens */
+/* Responsive layout */
+@media (max-width: 1200px) {
+  .team { width: 46%; }
+}
+
 @media (max-width: 900px) {
   .team { width: 90%; }
   .score { font-size: 48px; }
