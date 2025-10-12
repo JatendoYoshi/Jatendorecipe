@@ -12,12 +12,12 @@ html,body {
 
 h1 {
   margin: 18px 0;
-  font-size: 2.4rem; /* slightly bigger */
+  font-size: 2.4rem;
 }
 
 .scoreboard {
   display: flex;
-  gap: 40px; /* wider gap between teams */
+  gap: 40px;
   justify-content: center;
   align-items: flex-start;
   padding: 24px;
@@ -26,7 +26,7 @@ h1 {
 
 .team {
   background: #ffffff;
-  width: 48%; /* nearly half the screen */
+  width: 48%;
   min-width: 360px;
   border-radius: 14px;
   padding: 24px;
@@ -58,7 +58,7 @@ h1 {
 
 .score {
   font-family: 'Orbitron', sans-serif;
-  font-size: 56px; /* bigger scoreboard numbers */
+  font-size: 56px;
   background: #000;
   color: #7CFF00;
   padding: 10px 16px;
@@ -121,7 +121,6 @@ input[type="number"] {
   font-family: "Century Gothic", sans-serif;
 }
 
-/* Prizes area */
 .prizes {
   margin-top: 16px;
   background: #f3fff3;
@@ -147,7 +146,6 @@ input[type="number"] {
   margin: 6px 6px 4px 0;
 }
 
-/* Responsive layout */
 @media (max-width: 1200px) {
   .team { width: 46%; }
 }

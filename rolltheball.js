@@ -1,7 +1,8 @@
 // ==== Roll the Ball Scoreboard (complete) ====
 // Works with the HTML + CSS above. Uses localStorage for persistence.
+// Includes all functions: confirmRound, refundItem, redeemItem, addToken, redeemAsScore, updateTeamName, resetGame
 
-// Items and prices extracted from the provided document
+// Items and prices extracted from the original document
 const itemsData = [
   { name: "Large Coin", buy: 5, rent: 0, refund: 0, maxPlays: 25 },
   { name: "Metal Ball", buy: 10, rent: 5, refund: 0, maxPlays: 10 },
@@ -10,13 +11,14 @@ const itemsData = [
   { name: "Wooden Block", buy: 40, rent: 20, refund: 10, maxPlays: 6 },
 ];
 
-// default structure
+// Default structure for teams
 let teams = {
   A: { name: "Team A", score: 100, items: {}, gold: 0, silver: 0 },
   B: { name: "Team B", score: 100, items: {}, gold: 0, silver: 0 }
 };
 
 // ---------- Local storage helpers ----------
+
 function saveData() {
   localStorage.setItem("rollTheBallData", JSON.stringify(teams));
 }
@@ -28,11 +30,13 @@ function loadData() {
     const parsed = JSON.parse(raw);
     ["A", "B"].forEach(k => {
       if (!parsed[k]) return;
+
       teams[k].name = parsed[k].name ?? teams[k].name;
       teams[k].score = Number(parsed[k].score) || 0;
       teams[k].gold = Number(parsed[k].gold) || 0;
       teams[k].silver = Number(parsed[k].silver) || 0;
       teams[k].items = parsed[k].items ?? {};
+
       // ensure each item exists and numeric
       itemsData.forEach(it => {
         if (!teams[k].items[it.name]) teams[k].items[it.name] = { owned: 0, plays: 0 };
@@ -46,6 +50,7 @@ function loadData() {
 }
 
 // ---------- UI rendering helpers ----------
+
 function renderScore(team) {
   const el = document.getElementById("score" + team);
   if (!el) return;
@@ -60,10 +65,11 @@ function renderTokens(team) {
 }
 
 // ---------- Build item tables and wire UI ----------
+
 function setupTables() {
   loadData();
 
-  ["A","B"].forEach(team => {
+  ["A", "B"].forEach(team => {
     const tbody = document.getElementById("items" + team);
     if (!tbody) return;
     tbody.innerHTML = "";
@@ -90,6 +96,7 @@ function setupTables() {
       ownedInput.type = "number";
       ownedInput.min = "0";
       ownedInput.value = String(Number(state.owned) || 0);
+      ownedInput.id = `${team}_${item.name}_owned`;
       ownedInput.style.width = "60px";
       ownedInput.addEventListener("input", (e) => {
         state.owned = Number(e.target.value) || 0;
@@ -105,7 +112,6 @@ function setupTables() {
       tdMax.textContent = String(item.maxPlays);
 
       const tdRefund = document.createElement("td");
-      // inline onclick uses global refundItem function
       const refundBtn = document.createElement("button");
       refundBtn.type = "button";
       refundBtn.textContent = "Refund";
@@ -125,13 +131,11 @@ function setupTables() {
     // render score & tokens for this team
     renderScore(team);
     renderTokens(team);
-
-    // ensure redeem buttons that are inline in HTML remain functional (they call global functions)
-    // (No extra wiring needed because HTML buttons call window.* functions)
   });
 }
 
 // ---------- Game logic ----------
+
 function confirmRound(team) {
   const t = teams[team];
   let totalRent = 0;
@@ -139,12 +143,10 @@ function confirmRound(team) {
   const roundScore = Number(document.getElementById(`addScore${team}`)?.value) || 0;
 
   itemsData.forEach(item => {
-    const ownedEl = document.getElementById(`${team}_${item.name}_owned`);
-    const owned = Number(ownedEl?.value) || 0;
     const state = t.items[item.name];
 
-    totalRent += Number(item.rent) * owned;
-    state.plays = (Number(state.plays) || 0) + owned;
+    totalRent += Number(item.rent) * (state.owned || 0);
+    state.plays = (Number(state.plays) || 0) + (state.owned || 0);
 
     if (state.plays >= item.maxPlays) {
       repurchaseCost += Number(item.buy);
@@ -163,7 +165,7 @@ function confirmRound(team) {
   saveData();
 }
 
-// Refund: immediately add refund value to score
+// Refund logic
 function refundItem(team, itemName) {
   const item = itemsData.find(i => i.name === itemName);
   if (!item || !item.refund || Number(item.refund) === 0) return;
@@ -172,11 +174,12 @@ function refundItem(team, itemName) {
   saveData();
 }
 
-// ---------- Tokens: add / redeem ----------
+// ---------- Tokens management ----------
+
 function addToken(team, type) {
   if (!teams[team]) return;
-  if (type === 'gold') teams[team].gold = Number(teams[team].gold || 0) + 1;
-  else if (type === 'silver') teams[team].silver = Number(teams[team].silver || 0) + 1;
+  if (type === "gold") teams[team].gold = Number(teams[team].gold || 0) + 1;
+  else if (type === "silver") teams[team].silver = Number(teams[team].silver || 0) + 1;
   renderTokens(team);
   saveData();
 }
@@ -184,31 +187,40 @@ function addToken(team, type) {
 function redeemAsScore(team, type) {
   const t = teams[team];
   if (!t) return;
-  if (type === 'gold') {
-    if ((Number(t.gold) || 0) <= 0) { alert("No gold tokens available."); return; }
-    t.gold = Number(t.gold) - 1;
-    t.score = Number(t.score || 0) + 50;
-  } else if (type === 'silver') {
-    if ((Number(t.silver) || 0) <= 0) { alert("No silver tokens available."); return; }
-    t.silver = Number(t.silver) - 1;
-    t.score = Number(t.score || 0) + 20;
+
+  if (type === "gold") {
+    if ((Number(t.gold) || 0) <= 0) {
+      alert("No gold tokens available.");
+      return;
+    }
+    t.gold -= 1;
+    t.score = (Number(t.score) || 0) + 50;
+  } else if (type === "silver") {
+    if ((Number(t.silver) || 0) <= 0) {
+      alert("No silver tokens available.");
+      return;
+    }
+    t.silver -= 1;
+    t.score = (Number(t.score) || 0) + 20;
   }
+
   renderScore(team);
   renderTokens(team);
   saveData();
 }
 
-// Redeem for item(s) following reward rules (interactive via prompt)
+// ---------- Redeem for items ----------
+
 function redeemItem(team) {
   const t = teams[team];
   if (!t) return;
 
   const choice = prompt(
     "Redeem Options:\n" +
-    "1) 1 Silver Token - Free purchase of Metal Ball or Large Coin\n" +
-    "2) 1 Gold Token - Free purchase of Metal Stick or Arrow\n" +
-    "3) 3 Gold Tokens OR 5 Silver Tokens - Free Wooden Block or Two Free Purchases\n\n" +
-    "Enter 1, 2 or 3:"
+      "1) 1 Silver Token - Free purchase of Metal Ball or Large Coin\n" +
+      "2) 1 Gold Token - Free purchase of Metal Stick or Arrow\n" +
+      "3) 3 Gold Tokens OR 5 Silver Tokens - Free Wooden Block or Two Free Purchases\n\n" +
+      "Enter 1, 2 or 3:"
   );
   if (!choice) return;
   const opt = choice.trim();
@@ -216,50 +228,38 @@ function redeemItem(team) {
   if (opt === "1") {
     if ((Number(t.silver) || 0) < 1) { alert("Not enough silver tokens."); return; }
     const pick = prompt("Choose one to receive for free: 'Metal Ball' or 'Large Coin'").trim();
-    if (!pick) return;
-    if (teams[team].items[pick] !== undefined) {
-      teams[team].items[pick].owned = Number(teams[team].items[pick].owned || 0) + 1;
-      t.silver = Number(t.silver) - 1;
-      alert(`Redeemed 1 Silver token for ${pick}.`);
-    } else {
-      alert("Invalid item name. Redemption cancelled.");
-      return;
-    }
+    if (!pick || !t.items[pick]) { alert("Invalid item name. Redemption cancelled."); return; }
+    t.items[pick].owned += 1;
+    t.silver -= 1;
+    alert(`Redeemed 1 Silver token for ${pick}.`);
   } else if (opt === "2") {
     if ((Number(t.gold) || 0) < 1) { alert("Not enough gold tokens."); return; }
     const pick = prompt("Choose one to receive for free: 'Metal Stick' or 'Arrow'").trim();
-    if (!pick) return;
-    if (teams[team].items[pick] !== undefined) {
-      teams[team].items[pick].owned = Number(teams[team].items[pick].owned || 0) + 1;
-      t.gold = Number(t.gold) - 1;
-      alert(`Redeemed 1 Gold token for ${pick}.`);
-    } else {
-      alert("Invalid item name. Redemption cancelled.");
-      return;
-    }
+    if (!pick || !t.items[pick]) { alert("Invalid item name. Redemption cancelled."); return; }
+    t.items[pick].owned += 1;
+    t.gold -= 1;
+    alert(`Redeemed 1 Gold token for ${pick}.`);
   } else if (opt === "3") {
     const hasGold = (Number(t.gold) || 0) >= 3;
     const hasSilver = (Number(t.silver) || 0) >= 5;
     if (!hasGold && !hasSilver) { alert("Not enough tokens for option 3."); return; }
 
-    if (hasGold) t.gold = Number(t.gold) - 3;
-    else t.silver = Number(t.silver) - 5;
+    if (hasGold) t.gold -= 3;
+    else t.silver -= 5;
 
     const pick = prompt("Choose: 'Wooden Block' OR 'Two' (two free purchases)").trim().toLowerCase();
     if (pick === "wooden block") {
-      teams[team].items["Wooden Block"].owned = Number(teams[team].items["Wooden Block"].owned || 0) + 1;
+      t.items["Wooden Block"].owned += 1;
       alert("Redeemed for Wooden Block.");
     } else if (pick === "two" || pick === "two free purchases") {
       const first = prompt("First free purchase - enter item name:").trim();
       const second = prompt("Second free purchase - enter item name:").trim();
-      if (teams[team].items[first] !== undefined) teams[team].items[first].owned = Number(teams[team].items[first].owned || 0) + 1;
-      if (teams[team].items[second] !== undefined) teams[team].items[second].owned = Number(teams[team].items[second].owned || 0) + 1;
-      alert("Redeemed two free purchases (invalid names ignored).");
+      if (t.items[first]) t.items[first].owned += 1;
+      if (t.items[second]) t.items[second].owned += 1;
+      alert("Redeemed two free purchases.");
     } else {
       alert("Invalid choice; tokens returned.");
-      // refund tokens (prefer gold if used)
-      if (hasGold) t.gold = Number(t.gold) + 3;
-      else t.silver = Number(t.silver) + 5;
+      if (hasGold) t.gold += 3; else t.silver += 5;
       return;
     }
   } else {
@@ -267,12 +267,11 @@ function redeemItem(team) {
     return;
   }
 
-  // Update UI elements for owned counts & plays
   itemsData.forEach(item => {
     const ownedEl = document.getElementById(`${team}_${item.name}_owned`);
-    if (ownedEl) ownedEl.value = String(Number(teams[team].items[item.name].owned || 0));
+    if (ownedEl) ownedEl.value = String(t.items[item.name].owned || 0);
     const playsEl = document.getElementById(`${team}_${item.name}_plays`);
-    if (playsEl) playsEl.textContent = String(Number(teams[team].items[item.name].plays || 0));
+    if (playsEl) playsEl.textContent = String(t.items[item.name].plays || 0);
   });
 
   renderTokens(team);
@@ -280,7 +279,7 @@ function redeemItem(team) {
   saveData();
 }
 
-// ---------- Team name update (exposed to inline button in HTML) ----------
+// ---------- Team name update ----------
 function updateTeamName(team) {
   const input = document.getElementById(`team${team}NameInput`);
   if (!input) return;
@@ -292,44 +291,25 @@ function updateTeamName(team) {
   saveData();
 }
 
-// expose a few functions globally so inline onclick in HTML works
+// ---------- Reset Game ----------
+function resetGame() {
+  teams = {
+    A: { name: "Team A", score: 100, items: {}, gold: 0, silver: 0 },
+    B: { name: "Team B", score: 100, items: {}, gold: 0, silver: 0 }
+  };
+  localStorage.removeItem("rollTheBallData");
+  setupTables();
+  alert("Game has been reset!");
+}
+
+// ---------- Expose functions globally ----------
 window.addToken = addToken;
 window.redeemAsScore = redeemAsScore;
 window.redeemItem = redeemItem;
 window.confirmRound = confirmRound;
 window.updateTeamName = updateTeamName;
 window.refundItem = refundItem;
+window.resetGame = resetGame;
 
-// initialize on DOM ready
+// ---------- Initialize ----------
 document.addEventListener("DOMContentLoaded", setupTables);
-
-function resetGame() {
-  // Reset team names
-  document.getElementById('teamAName').textContent = 'Team A';
-  document.getElementById('teamBName').textContent = 'Team B';
-  document.getElementById('teamANameInput').value = 'Team A';
-  document.getElementById('teamBNameInput').value = 'Team B';
-
-  // Reset scores
-  document.getElementById('scoreA').textContent = '100';
-  document.getElementById('scoreB').textContent = '100';
-  document.getElementById('addScoreA').value = 0;
-  document.getElementById('addScoreB').value = 0;
-
-  // Reset tokens
-  document.getElementById('goldA').textContent = '0';
-  document.getElementById('silverA').textContent = '0';
-  document.getElementById('goldB').textContent = '0';
-  document.getElementById('silverB').textContent = '0';
-
-  // Clear items tables
-  document.getElementById('itemsA').innerHTML = '';
-  document.getElementById('itemsB').innerHTML = '';
-
-  // Optionally, reset any other game state variables you have in your JS
-  if (typeof gameState !== 'undefined') {
-    gameState = {}; // reset your gameState object if exists
-  }
-
-  alert('Game has been reset!');
-}
