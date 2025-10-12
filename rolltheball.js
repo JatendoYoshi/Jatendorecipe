@@ -1,9 +1,9 @@
 const itemsData = [
-  { name: "Large Coin", buy: 5, rent: 0, maxPlays: 25 },
-  { name: "Metal Ball", buy: 10, rent: 5, maxPlays: 10 },
-  { name: "Metal Stick", buy: 15, rent: 10, maxPlays: 8 },
-  { name: "Arrow", buy: 20, rent: 10, maxPlays: 7 },
-  { name: "Wooden Block", buy: 40, rent: 20, maxPlays: 6 },
+  { name: "Large Coin", buy: 5, rent: 0, refund: 0, maxPlays: 25 },
+  { name: "Metal Ball", buy: 10, rent: 5, refund: 0, maxPlays: 10 },
+  { name: "Metal Stick", buy: 15, rent: 10, refund: 5, maxPlays: 8 },
+  { name: "Arrow", buy: 20, rent: 10, refund: 10, maxPlays: 7 },
+  { name: "Wooden Block", buy: 40, rent: 20, refund: 10, maxPlays: 6 },
 ];
 
 let teams = {
@@ -22,6 +22,7 @@ function setupTables() {
         <td><input type="number" id="${team}_${item.name}_owned" value="0" min="0"></td>
         <td id="${team}_${item.name}_plays">0</td>
         <td>${item.maxPlays}</td>
+        <td><button onclick="refundItem('${team}', '${item.name}')">Refund</button></td>
       `;
       tbody.appendChild(row);
     });
@@ -61,11 +62,16 @@ function confirmRound(team) {
   t.score -= (totalRent + repurchaseCost);
 
   if (t.score < 0) t.score = 0;
-
   document.getElementById('score' + team).textContent = t.score;
-
-  // Reset round score input
   document.getElementById(`addScore${team}`).value = 0;
+}
+
+function refundItem(team, itemName) {
+  const t = teams[team];
+  const item = itemsData.find(i => i.name === itemName);
+  if (!item || item.refund === 0) return;
+  t.score += item.refund;
+  document.getElementById('score' + team).textContent = t.score;
 }
 
 setupTables();
