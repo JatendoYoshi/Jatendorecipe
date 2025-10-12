@@ -1,0 +1,77 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap');
+
+body {
+  background-color: #ccffcc;
+  font-family: "Century Gothic", sans-serif;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+
+h1 {
+  font-size: 2.5em;
+  margin: 20px 0;
+}
+
+.scoreboard {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  margin: 20px;
+}
+
+.team {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 0 10px #555;
+  padding: 20px;
+  width: 45%;
+  min-width: 320px;
+}
+
+.score {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 3em;
+  background: black;
+  color: limegreen;
+  border-radius: 10px;
+  padding: 10px;
+  margin: 10px 0;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+th, td {
+  border: 1px solid #333;
+  padding: 8px;
+  font-size: 0.9em;
+}
+
+th {
+  background: #e0ffe0;
+}
+
+input[type="number"] {
+  width: 60px;
+  text-align: center;
+  margin: 5px;
+}
+
+button {
+  background: limegreen;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1em;
+  margin-top: 10px;
+}
+
+button:hover {
+  background: #009900;
+}
