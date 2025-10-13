@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Post Office - Rental</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="po.css" />
+</head>
+<body class="bg-gray-50 text-gray-800">
+  <nav class="bg-blue-700 text-white flex flex-wrap justify-between items-center px-6 py-3 shadow-md">
+    <h1 class="text-2xl font-semibold tracking-wide">Post Office</h1>
+    <ul class="flex flex-wrap gap-4 text-lg">
+      <li><a href="index.html" class="nav-link">Home</a></li>
+      <li><a href="stationery.html" class="nav-link">Stationery</a></li>
+      <li><a href="rental.html" class="nav-link active">Rental</a></li>
+      <li><a href="printing.html" class="nav-link">Printing & Laminating</a></li>
+      <li><a href="reserve.html" class="nav-link">Reserve</a></li>
+    </ul>
+  </nav>
+
+  <main class="max-w-5xl mx-auto p-8 bg-white mt-8 rounded-2xl shadow-lg animate-fade-in">
+    <h2 class="text-3xl font-bold text-blue-700 mb-4">PO Box Rentals</h2>
+    <p class="text-lg mb-4">Secure your own PO box today for safe, private mail handling.</p>
+    <ul class="list-disc list-inside text-lg space-y-2">
+      <li>Small Box — $50/year</li>
+      <li>Medium Box — $75/year</li>
+      <li>Large Box — $100/year</li>
+    </ul>
+    <p class="mt-4 text-lg">Reserve your box easily from our <a href="reserve.html" class="text-blue-600 hover:underline">Reserve page</a>.</p>
+  </main>
+</body>
+</html>
