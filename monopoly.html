@@ -336,6 +336,21 @@
     font-size:1em;padding:4px;border-radius:6px;
   }
   .small-note{ font-size:0.78em; color:#555; margin-top:6px;}
+  .timer-bar{
+    font-size: 1.15em;
+    font-weight: bold;
+    color: var(--tram-teal);
+    margin: 6px 0;
+    transition: color .2s;
+  }
+  #timer-settings{
+    display:flex;
+    gap:14px;
+    justify-content:center;
+    margin-top:8px;
+    font-size:0.85em;
+  }
+  #timer-settings span{ font-weight:bold; }
 </style>
 </head>
 <body>
@@ -362,6 +377,14 @@
         <button id="roll-btn" class="action-btn">🎲 Roll the Dice</button>
       </div>
       <div id="turn-actions" style="margin-top:10px;"></div>
+      <div id="timer-settings">
+        <div>⏱ P1: <span id="p1-timer-display">20s</span>
+          <button class="action-btn" style="padding:2px 8px;font-size:0.8em;" onclick="promptSetTimeLimit(0)">Change</button>
+        </div>
+        <div>⏱ P2: <span id="p2-timer-display">Off</span>
+          <button class="action-btn" style="padding:2px 8px;font-size:0.8em;" onclick="promptSetTimeLimit(1)">Change</button>
+        </div>
+      </div>
     </div>
 
     <div class="panel-box">
@@ -523,8 +546,32 @@ function setupPlayers(names){
   players = names.map((n,i)=>({
     id:i, name:n, color: PLAYER_COLORS[i], avatar: PLAYER_AVATARS[i], money:1500, position:0,
     properties:[], inJail:false, jailTurns:0, bankrupt:false,
-    hardMode: i===0
+    hardMode: i===0,
+    timeLimit: i===0 ? 20 : null
   }));
+  updateTimerDisplays();
+}
+
+function promptSetTimeLimit(playerId){
+  const p = players[playerId];
+  if(!p) return;
+  const current = p.timeLimit || 0;
+  const input = prompt(`Set time limit for ${p.name} in seconds (0 = no limit):`, current);
+  if(input === null) return;
+  const val = parseInt(input, 10);
+  if(isNaN(val) || val < 0){ alert('Please enter a valid number of seconds (0 or more).'); return; }
+  p.timeLimit = val > 0 ? val : null;
+  updateTimerDisplays();
+  log(`⏱ Time limit for ${p.name} set to ${p.timeLimit ? p.timeLimit + 's' : 'no limit'}.`);
+}
+window.promptSetTimeLimit = promptSetTimeLimit;
+
+function updateTimerDisplays(){
+  const p1 = players[0], p2 = players[1];
+  const d1 = document.getElementById('p1-timer-display');
+  const d2 = document.getElementById('p2-timer-display');
+  if(p1 && d1) d1.textContent = p1.timeLimit ? p1.timeLimit + 's' : 'Off';
+  if(p2 && d2) d2.textContent = p2.timeLimit ? p2.timeLimit + 's' : 'Off';
 }
 
 function log(msg){
@@ -731,7 +778,7 @@ function rentFor(tile, diceTotal){
 }
 
 /* ---------- modal helper (question) ---------- */
-function askMathQuestion({title, question, tier, hardMode, onCorrect, onWrong, allowSkip, skipLabel}){
+function askMathQuestion({title, question, tier, hardMode, timeLimit, onCorrect, onWrong, allowSkip, skipLabel}){
   awaitingModal = true;
   const root = document.getElementById('modal-root');
   const q = question || genQuestion(tier, null, hardMode);
@@ -741,6 +788,7 @@ function askMathQuestion({title, question, tier, hardMode, onCorrect, onWrong, a
       <div class="modal-box">
         <div class="badge" ${hardMode?'style="background:var(--red);"':''}>${badgeText}</div>
         <h2>${title}</h2>
+        ${timeLimit ? `<div class="timer-bar" id="q-timer">⏱ ${timeLimit}s</div>` : ''}
         <div class="question">${q.text}</div>
         <input type="number" id="answer-input" autofocus />
         <div class="feedback" id="q-feedback"></div>
@@ -754,12 +802,23 @@ function askMathQuestion({title, question, tier, hardMode, onCorrect, onWrong, a
   const submit = document.getElementById('submit-answer');
   const fb = document.getElementById('q-feedback');
   input.focus();
-  function finish(correct){
+
+  let timerInterval = null;
+  let timeRemaining = timeLimit || 0;
+  const timerEl = document.getElementById('q-timer');
+
+  function clearTimer(){
+    if(timerInterval){ clearInterval(timerInterval); timerInterval = null; }
+  }
+
+  function finish(correct, timedOut){
+    clearTimer();
     root.innerHTML='';
     awaitingModal = false;
     if(correct) onCorrect && onCorrect();
-    else onWrong && onWrong();
+    else onWrong && onWrong(timedOut);
   }
+
   submit.onclick = ()=>{
     const val = parseInt(input.value,10);
     if(val === q.answer){
@@ -775,6 +834,22 @@ function askMathQuestion({title, question, tier, hardMode, onCorrect, onWrong, a
   input.addEventListener('keydown', e=>{ if(e.key==='Enter') submit.click(); });
   if(allowSkip){
     document.getElementById('skip-answer').onclick = ()=> finish(false);
+  }
+
+  if(timeLimit && timerEl){
+    timerInterval = setInterval(()=>{
+      timeRemaining--;
+      timerEl.textContent = `⏱ ${timeRemaining}s`;
+      if(timeRemaining <= 5){ timerEl.style.color = 'var(--red)'; }
+      if(timeRemaining <= 0){
+        clearTimer();
+        fb.textContent = `Time's up! The answer was ${q.answer}.`;
+        fb.className = 'feedback bad';
+        submit.disabled = true;
+        input.disabled = true;
+        setTimeout(()=>finish(false, true), 1000);
+      }
+    }, 1000);
   }
 }
 
@@ -819,6 +894,7 @@ function offerPurchase(player, tileIdx){
         title: `Buy ${t.name}?`,
         tier: tierForPrice(t.price),
         hardMode: player.hardMode,
+        timeLimit: player.timeLimit,
         allowSkip:true, skipLabel:"Don't buy",
         onCorrect: ()=>{
           if(player.money >= t.price){
@@ -850,6 +926,7 @@ function chargeRent(player, tileIdx){
     title: `Rent due to ${owner.name}!`,
     tier: tierForPrice(t.price || 200),
     hardMode: player.hardMode,
+        timeLimit: player.timeLimit,
     onCorrect: ()=>{
       payRent(player, owner, amount);
       log(`${player.name} solved the sum and paid the correct rent of £${amount} to ${owner.name} for ${t.name}.`);
@@ -906,6 +983,7 @@ function handleChanceOrChest(player, isChance){
         title: isChance? 'Times Trial' : 'Division Dash',
         tier: card.tier,
         hardMode: player.hardMode,
+        timeLimit: player.timeLimit,
         onCorrect: ()=>{
           if(card.reward){ player.money += card.reward; log(`${player.name} solved it and earned £${card.reward}!`); }
           else { log(`${player.name} solved it — nae reward this time, but well done!`); }
@@ -929,6 +1007,7 @@ function handleTax(player, tile){
     title: tile.name,
     tier: 3,
     hardMode: player.hardMode,
+        timeLimit: player.timeLimit,
     onCorrect: ()=>{
       const reduced = Math.round(tile.amount*0.6);
       player.money -= reduced;
@@ -966,6 +1045,7 @@ function tryJailEscape(player){
         title:'Escape the Dungeons!',
         tier:4,
         hardMode: player.hardMode,
+        timeLimit: player.timeLimit,
         allowSkip:true, skipLabel:'Pay £50 bail instead',
         onCorrect: ()=>{
           player.inJail=false;
@@ -1076,6 +1156,7 @@ function chargeRentWrapper(player, idx, wasDouble){
     title: `Rent due to ${owner.name}!`,
     tier: tierForPrice(t.price || 200),
     hardMode: player.hardMode,
+        timeLimit: player.timeLimit,
     onCorrect: ()=>{
       payRent(player, owner, amount);
       log(`${player.name} solved the sum and paid rent of £${amount} to ${owner.name} for ${t.name}.`);
