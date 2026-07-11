@@ -52,7 +52,7 @@
   .layout{
     display:flex;
     gap:20px;
-    max-width:1500px;
+    max-width:1900px;
     margin:0 auto;
     align-items:flex-start;
     flex-wrap:wrap;
@@ -61,10 +61,10 @@
   /* BOARD */
   #board{
     display:grid;
-    grid-template-columns: repeat(11, minmax(56px, 76px));
-    grid-template-rows: repeat(11, minmax(56px, 76px));
+    grid-template-columns: repeat(11, minmax(78px, 108px));
+    grid-template-rows: repeat(11, minmax(78px, 108px));
     background: var(--paper);
-    border: 6px solid var(--tartan-green-dark);
+    border: 8px solid var(--tartan-green-dark);
     box-shadow: 0 10px 40px rgba(0,0,0,.5);
     position: relative;
     border-radius: 6px;
@@ -77,9 +77,9 @@
     flex-direction:column;
     justify-content:flex-end;
     align-items:center;
-    font-size: 0.58em;
+    font-size: 0.72em;
     text-align:center;
-    padding: 2px;
+    padding: 3px;
     overflow:hidden;
     cursor:pointer;
     transition: background .15s;
@@ -93,35 +93,35 @@
   }
   .tile .name{
     font-weight:bold;
-    line-height:1.05;
-    margin-top:16px;
+    line-height:1.1;
+    margin-top:20px;
     padding: 0 2px;
     z-index:2;
   }
   .tile .price{
-    font-size:0.95em;
+    font-size:1em;
     color:#555;
     z-index:2;
   }
   .tile.corner{
-    font-size:0.62em;
+    font-size:0.74em;
     justify-content:center;
   }
-  .tile.corner .name{ margin-top:0; font-size:1.15em; }
-  .tile.railroad .name, .tile.utility .name{ margin-top: 20px; }
+  .tile.corner .name{ margin-top:0; font-size:1.2em; }
+  .tile.railroad .name, .tile.utility .name{ margin-top: 26px; }
   .owned-mark{
     position:absolute;
     bottom:2px;
     left:2px;
-    width:10px;height:10px;
+    width:13px;height:13px;
     border-radius:50%;
     z-index:3;
     border:1px solid #0004;
   }
   .house-mark{
     position:absolute;
-    top:18px; right:2px;
-    font-size: 0.8em;
+    top:22px; right:2px;
+    font-size: 1em;
     z-index:3;
   }
   .tokens-on-tile{
@@ -133,9 +133,9 @@
     z-index:4;
   }
   .token-dot{
-    width:12px;height:12px;
+    width:16px;height:16px;
     border-radius:50%;
-    border:1.5px solid #fff;
+    border:2px solid #fff;
     box-shadow:0 1px 3px rgba(0,0,0,.5);
   }
   #center-logo{
@@ -222,10 +222,31 @@
     padding: 6px 4px;
     border-radius:6px;
     margin-bottom:4px;
+    cursor:pointer;
+    transition: background .12s;
+  }
+  .player-row:hover{
+    background: #efe7d3;
   }
   .player-row.active{
     background: #fff4d6;
     box-shadow: inset 0 0 0 2px var(--gold);
+  }
+  .profile-stat{
+    display:flex;
+    justify-content:space-between;
+    padding:4px 0;
+    border-bottom:1px dotted #ccc;
+    font-size:0.92em;
+  }
+  .profile-avatar{
+    width:56px;height:56px;
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.8em;
+    margin: 0 auto 10px auto;
+    border:3px solid #fff;
+    box-shadow:0 0 0 2px #0003;
   }
   .player-row .swatch{
     width:16px;height:16px;border-radius:50%;
@@ -344,8 +365,10 @@
     </div>
 
     <div class="panel-box">
-      <h3>Town Crier</h3>
-      <div id="log"></div>
+      <h3 id="crier-toggle" style="cursor:pointer; user-select:none;">
+        <span id="crier-arrow">▸</span> Town Crier <span style="font-size:0.6em; font-weight:normal; color:#666;">(click to open)</span>
+      </h3>
+      <div id="log" style="display:none;"></div>
     </div>
 
     <div class="panel-box" id="property-panel-wrap" style="display:none;">
@@ -417,6 +440,7 @@ const BOARD = [
 ];
 
 const PLAYER_COLORS = ['#c1443c','#274a8c','#2f7a4f','#c99a3c'];
+const PLAYER_AVATARS = ['🏰','🎻','🥁','🦌'];
 
 let players = [];
 let currentPlayerIndex = 0;
@@ -444,11 +468,24 @@ function tableRangeForTier(t){
   }
 }
 
-function genQuestion(tier, forceType){
+function genQuestion(tier, forceType, hardMode){
+  const isDiv = forceType==='div' ? true : (forceType==='mult' ? false : Math.random()<0.45);
+
+  if(hardMode){
+    // Double-digit multiplication & division for Player 1
+    const a = randInt(11,49);
+    const b = randInt(11,49);
+    if(isDiv){
+      const product = a*b;
+      return { text: `${product} ÷ ${a} = ?`, answer: b };
+    } else {
+      return { text: `${a} × ${b} = ?`, answer: a*b };
+    }
+  }
+
   const [lo,hi] = tableRangeForTier(tier||2);
   const a = randInt(lo,hi);
   const b = randInt(2,12);
-  const isDiv = forceType==='div' ? true : (forceType==='mult' ? false : Math.random()<0.45);
   if(isDiv){
     const product = a*b;
     return { text: `${product} ÷ ${a} = ?`, answer: b };
@@ -484,8 +521,9 @@ function drawDivisionDashCard(){
 /* ---------- setup ---------- */
 function setupPlayers(names){
   players = names.map((n,i)=>({
-    id:i, name:n, color: PLAYER_COLORS[i], money:1500, position:0,
-    properties:[], inJail:false, jailTurns:0, bankrupt:false
+    id:i, name:n, color: PLAYER_COLORS[i], avatar: PLAYER_AVATARS[i], money:1500, position:0,
+    properties:[], inJail:false, jailTurns:0, bankrupt:false,
+    hardMode: i===0
   }));
 }
 
@@ -607,11 +645,37 @@ function renderPlayersPanel(){
     const row = document.createElement('div');
     row.className = 'player-row' + (i===currentPlayerIndex && !p.bankrupt ? ' active':'');
     row.innerHTML = `<div class="swatch" style="background:${p.color}"></div>
-      <div class="pname">${p.name}${p.bankrupt? ' (bankrupt)':''}${p.inJail? ' 🔒':''}</div>
+      <div class="pname">${p.avatar} ${p.name}${p.hardMode? ' <span style="font-size:0.7em;color:var(--red);">(double-digit)</span>':''}${p.bankrupt? ' (bankrupt)':''}${p.inJail? ' 🔒':''}</div>
       <div class="pmoney">£${p.money}</div>`;
+    row.addEventListener('click', ()=> showPlayerProfile(p.id));
     el.appendChild(row);
   });
   renderPropertyPanel();
+}
+
+function showPlayerProfile(playerId){
+  if(awaitingModal) return;
+  const p = players[playerId];
+  const propsHtml = p.properties.length===0
+    ? '<p class="small-note">No properties owned yet.</p>'
+    : p.properties.map(idx=>{
+        const t = BOARD[idx];
+        const houseStr = t.type==='property' ? (t.houses===5? ' 🏨' : (t.houses>0? ' '+'🏠'.repeat(t.houses) : '')) : '';
+        return `<div class="profile-stat"><span>${t.name}${houseStr}</span><span>£${t.price}</span></div>`;
+      }).join('');
+  showMessageModal({
+    title: `${p.avatar} ${p.name}'s Profile`,
+    html: `
+      <div class="profile-avatar" style="background:${p.color}22; box-shadow:0 0 0 3px ${p.color};">${p.avatar}</div>
+      <div class="profile-stat"><span>Gold</span><span>£${p.money}</span></div>
+      <div class="profile-stat"><span>Difficulty</span><span>${p.hardMode? 'Double-digit 🔥' : 'Standard'}</span></div>
+      <div class="profile-stat"><span>Status</span><span>${p.bankrupt? 'Bankrupt 💀' : (p.inJail? 'In the Dungeons 🔒' : 'Free & about the toon')}</span></div>
+      <div class="profile-stat"><span>Properties owned</span><span>${p.properties.length}</span></div>
+      <h3 style="margin-bottom:4px;">Properties</h3>
+      ${propsHtml}
+    `,
+    buttonLabel: 'Close'
+  });
 }
 
 function renderPropertyPanel(){
@@ -667,14 +731,15 @@ function rentFor(tile, diceTotal){
 }
 
 /* ---------- modal helper (question) ---------- */
-function askMathQuestion({title, question, tier, onCorrect, onWrong, allowSkip, skipLabel}){
+function askMathQuestion({title, question, tier, hardMode, onCorrect, onWrong, allowSkip, skipLabel}){
   awaitingModal = true;
   const root = document.getElementById('modal-root');
-  const q = question || genQuestion(tier);
+  const q = question || genQuestion(tier, null, hardMode);
+  const badgeText = hardMode ? '🔥 Double-Digit Challenge (Player 1)' : '📐 Times &amp; Division Challenge';
   root.innerHTML = `
     <div class="modal-overlay">
       <div class="modal-box">
-        <div class="badge">📐 Times &amp; Division Challenge</div>
+        <div class="badge" ${hardMode?'style="background:var(--red);"':''}>${badgeText}</div>
         <h2>${title}</h2>
         <div class="question">${q.text}</div>
         <input type="number" id="answer-input" autofocus />
@@ -753,6 +818,7 @@ function offerPurchase(player, tileIdx){
       askMathQuestion({
         title: `Buy ${t.name}?`,
         tier: tierForPrice(t.price),
+        hardMode: player.hardMode,
         allowSkip:true, skipLabel:"Don't buy",
         onCorrect: ()=>{
           if(player.money >= t.price){
@@ -783,6 +849,7 @@ function chargeRent(player, tileIdx){
   askMathQuestion({
     title: `Rent due to ${owner.name}!`,
     tier: tierForPrice(t.price || 200),
+    hardMode: player.hardMode,
     onCorrect: ()=>{
       payRent(player, owner, amount);
       log(`${player.name} solved the sum and paid the correct rent of £${amount} to ${owner.name} for ${t.name}.`);
@@ -838,6 +905,7 @@ function handleChanceOrChest(player, isChance){
       askMathQuestion({
         title: isChance? 'Times Trial' : 'Division Dash',
         tier: card.tier,
+        hardMode: player.hardMode,
         onCorrect: ()=>{
           if(card.reward){ player.money += card.reward; log(`${player.name} solved it and earned £${card.reward}!`); }
           else { log(`${player.name} solved it — nae reward this time, but well done!`); }
@@ -860,6 +928,7 @@ function handleTax(player, tile){
   askMathQuestion({
     title: tile.name,
     tier: 3,
+    hardMode: player.hardMode,
     onCorrect: ()=>{
       const reduced = Math.round(tile.amount*0.6);
       player.money -= reduced;
@@ -896,6 +965,7 @@ function tryJailEscape(player){
       askMathQuestion({
         title:'Escape the Dungeons!',
         tier:4,
+        hardMode: player.hardMode,
         allowSkip:true, skipLabel:'Pay £50 bail instead',
         onCorrect: ()=>{
           player.inJail=false;
@@ -1005,6 +1075,7 @@ function chargeRentWrapper(player, idx, wasDouble){
   askMathQuestion({
     title: `Rent due to ${owner.name}!`,
     tier: tierForPrice(t.price || 200),
+    hardMode: player.hardMode,
     onCorrect: ()=>{
       payRent(player, owner, amount);
       log(`${player.name} solved the sum and paid rent of £${amount} to ${owner.name} for ${t.name}.`);
@@ -1092,6 +1163,14 @@ function showStartModal(){
     startGame(n);
   };
 }
+
+document.getElementById('crier-toggle').addEventListener('click', ()=>{
+  const logEl = document.getElementById('log');
+  const arrow = document.getElementById('crier-arrow');
+  const isOpen = logEl.style.display !== 'none';
+  logEl.style.display = isOpen ? 'none' : 'block';
+  arrow.textContent = isOpen ? '▸' : '▾';
+});
 
 renderBoard();
 showStartModal();
