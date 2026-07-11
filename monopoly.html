@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Auld Reekie Tycoon — Edinburgh Times Table Monopoly</title>
+<style>
+  :root{
+    --ink:#1c2a24;
+    --stone:#e9e4d8;
+    --stone-dark:#cfc6ae;
+    --tartan-green:#1f4d3a;
+    --tartan-green-dark:#123326;
+    --thistle:#6a4c7c;
+    --tram-teal:#1f8a8c;
+    --gold:#c99a3c;
+    --paper:#f6f1e6;
+    --brown:#7a4a2b;
+    --lightblue:#9fd6e6;
+    --pink:#d16aa0;
+    --orange:#e08a3c;
+    --red:#c1443c;
+    --yellow:#e3c23c;
+    --green:#2f7a4f;
+    --darkblue:#274a8c;
+    --font-display: 'Playfair Display', Georgia, serif;
+    --font-body: 'Trebuchet MS', 'Segoe UI', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background: radial-gradient(circle at 20% 10%, #2a5a44 0%, var(--tartan-green-dark) 55%, #0d241b 100%);
+    font-family: var(--font-body);
+    color: var(--ink);
+    min-height:100vh;
+    padding:20px;
+  }
+  h1.title{
+    font-family: var(--font-display);
+    color: var(--paper);
+    text-align:center;
+    margin: 0 0 4px 0;
+    font-size: 2.3em;
+    letter-spacing: 0.5px;
+    text-shadow: 0 2px 8px rgba(0,0,0,.5);
+  }
+  p.subtitle{
+    text-align:center;
+    color: var(--stone);
+    margin: 0 0 18px 0;
+    font-style: italic;
+  }
+  .layout{
+    display:flex;
+    gap:20px;
+    max-width:1500px;
+    margin:0 auto;
+    align-items:flex-start;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+  /* BOARD */
+  #board{
+    display:grid;
+    grid-template-columns: repeat(11, minmax(56px, 76px));
+    grid-template-rows: repeat(11, minmax(56px, 76px));
+    background: var(--paper);
+    border: 6px solid var(--tartan-green-dark);
+    box-shadow: 0 10px 40px rgba(0,0,0,.5);
+    position: relative;
+    border-radius: 6px;
+  }
+  .tile{
+    border: 1px solid #b9ae90;
+    position:relative;
+    background: var(--paper);
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-end;
+    align-items:center;
+    font-size: 0.58em;
+    text-align:center;
+    padding: 2px;
+    overflow:hidden;
+    cursor:pointer;
+    transition: background .15s;
+  }
+  .tile:hover{ background:#efe7d3; }
+  .tile .band{
+    height: 16px;
+    width:100%;
+    position:absolute;
+    top:0; left:0;
+  }
+  .tile .name{
+    font-weight:bold;
+    line-height:1.05;
+    margin-top:16px;
+    padding: 0 2px;
+    z-index:2;
+  }
+  .tile .price{
+    font-size:0.95em;
+    color:#555;
+    z-index:2;
+  }
+  .tile.corner{
+    font-size:0.62em;
+    justify-content:center;
+  }
+  .tile.corner .name{ margin-top:0; font-size:1.15em; }
+  .tile.railroad .name, .tile.utility .name{ margin-top: 20px; }
+  .owned-mark{
+    position:absolute;
+    bottom:2px;
+    left:2px;
+    width:10px;height:10px;
+    border-radius:50%;
+    z-index:3;
+    border:1px solid #0004;
+  }
+  .house-mark{
+    position:absolute;
+    top:18px; right:2px;
+    font-size: 0.8em;
+    z-index:3;
+  }
+  .tokens-on-tile{
+    position:absolute;
+    top:2px; left:2px;
+    display:flex;
+    gap:2px;
+    flex-wrap:wrap;
+    z-index:4;
+  }
+  .token-dot{
+    width:12px;height:12px;
+    border-radius:50%;
+    border:1.5px solid #fff;
+    box-shadow:0 1px 3px rgba(0,0,0,.5);
+  }
+  #center-logo{
+    grid-column: 2/11;
+    grid-row: 2/11;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    background: repeating-linear-gradient(45deg, #eee4cd, #eee4cd 22px, #e4d8b8 22px, #e4d8b8 44px);
+    border: 2px dashed var(--tartan-green);
+    border-radius: 8px;
+    padding: 16px;
+    text-align:center;
+  }
+  #center-logo h2{
+    font-family: var(--font-display);
+    color: var(--tartan-green-dark);
+    margin: 4px 0;
+  }
+  #center-logo .kilt-strip{
+    width:80%;
+    height:8px;
+    background: repeating-linear-gradient(90deg, var(--tartan-green) 0 10px, var(--thistle) 10px 20px, var(--gold) 20px 24px);
+    margin: 6px 0;
+    border-radius:4px;
+  }
+  #dice-area{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    justify-content:center;
+    margin: 8px 0;
+  }
+  .die{
+    width:42px;height:42px;
+    background:#fff;
+    border:2px solid var(--ink);
+    border-radius:8px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.4em;
+    font-weight:bold;
+    box-shadow: 0 2px 4px rgba(0,0,0,.3);
+  }
+  #roll-btn, .action-btn{
+    background: var(--gold);
+    color: #3a2a08;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight:bold;
+    cursor:pointer;
+    font-size: 1em;
+    box-shadow: 0 3px 0 #8a6a1c;
+    transition: transform .08s;
+  }
+  #roll-btn:active, .action-btn:active{ transform: translateY(2px); box-shadow: 0 1px 0 #8a6a1c; }
+  #roll-btn:disabled{ background:#999; box-shadow:none; cursor:not-allowed; color:#eee;}
+
+  /* SIDE PANEL */
+  #sidepanel{
+    width: 380px;
+    display:flex;
+    flex-direction:column;
+    gap: 14px;
+  }
+  .panel-box{
+    background: var(--paper);
+    border-radius: 10px;
+    padding: 14px 16px;
+    box-shadow: 0 6px 20px rgba(0,0,0,.35);
+  }
+  .panel-box h3{
+    margin: 0 0 8px 0;
+    font-family: var(--font-display);
+    color: var(--tartan-green-dark);
+    border-bottom: 2px solid var(--gold);
+    padding-bottom: 4px;
+  }
+  .player-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding: 6px 4px;
+    border-radius:6px;
+    margin-bottom:4px;
+  }
+  .player-row.active{
+    background: #fff4d6;
+    box-shadow: inset 0 0 0 2px var(--gold);
+  }
+  .player-row .swatch{
+    width:16px;height:16px;border-radius:50%;
+    border:2px solid #fff;
+    box-shadow:0 0 0 1px #0003;
+    flex-shrink:0;
+  }
+  .player-row .pname{ font-weight:bold; flex:1; }
+  .player-row .pmoney{ font-variant-numeric: tabular-nums; }
+  #log{
+    height: 150px;
+    overflow-y:auto;
+    font-size: 0.85em;
+    background: #fffdf6;
+    border: 1px solid var(--stone-dark);
+    border-radius:6px;
+    padding: 8px;
+    line-height:1.4;
+  }
+  #log div{ margin-bottom:3px; }
+  #turn-actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  /* MODAL */
+  .modal-overlay{
+    position:fixed; inset:0;
+    background: rgba(10,20,15,.75);
+    display:flex; align-items:center; justify-content:center;
+    z-index: 1000;
+  }
+  .modal-box{
+    background: var(--paper);
+    border-radius: 12px;
+    padding: 26px 30px;
+    max-width: 460px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0,0,0,.6);
+    border-top: 6px solid var(--gold);
+    text-align:center;
+  }
+  .modal-box h2{
+    font-family: var(--font-display);
+    color: var(--tartan-green-dark);
+    margin-top:0;
+  }
+  .modal-box .question{
+    font-size: 1.9em;
+    font-weight:bold;
+    color: var(--tram-teal);
+    margin: 16px 0;
+  }
+  .modal-box input[type=number]{
+    font-size: 1.3em;
+    width: 120px;
+    text-align:center;
+    padding: 6px;
+    border: 2px solid var(--tartan-green);
+    border-radius: 8px;
+    margin-bottom: 12px;
+  }
+  .modal-box .feedback{
+    min-height: 26px;
+    font-weight:bold;
+    margin-bottom: 8px;
+  }
+  .feedback.good{ color: var(--green); }
+  .feedback.bad{ color: var(--red); }
+  .modal-actions{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:10px;}
+  .badge{
+    display:inline-block;
+    padding: 2px 10px;
+    border-radius: 20px;
+    background: var(--tartan-green);
+    color:#fff;
+    font-size:0.75em;
+    margin-bottom:8px;
+  }
+  #property-panel .prop-line{
+    display:flex;justify-content:space-between;
+    font-size:0.85em;
+    padding:3px 0;
+    border-bottom:1px dotted #ccc;
+  }
+  select, .modal-box select{
+    font-size:1em;padding:4px;border-radius:6px;
+  }
+  .small-note{ font-size:0.78em; color:#555; margin-top:6px;}
+</style>
+</head>
+<body>
+
+<h1 class="title">🏴󠁧󠁢󠁳󠁣󠁴󠁿 Auld Reekie Tycoon</h1>
+<p class="subtitle">Edinburgh's own property game — build your empire, but only if your times tables and division haud up!</p>
+
+<div class="layout">
+  <div id="board"></div>
+
+  <div id="sidepanel">
+    <div class="panel-box">
+      <h3>Players</h3>
+      <div id="players-list"></div>
+    </div>
+
+    <div class="panel-box">
+      <h3>The Wynd &amp; Close</h3>
+      <div id="dice-area">
+        <div class="die" id="die1">-</div>
+        <div class="die" id="die2">-</div>
+      </div>
+      <div style="text-align:center;">
+        <button id="roll-btn" class="action-btn">🎲 Roll the Dice</button>
+      </div>
+      <div id="turn-actions" style="margin-top:10px;"></div>
+    </div>
+
+    <div class="panel-box">
+      <h3>Town Crier</h3>
+      <div id="log"></div>
+    </div>
+
+    <div class="panel-box" id="property-panel-wrap" style="display:none;">
+      <h3>My Properties</h3>
+      <div id="property-panel"></div>
+    </div>
+  </div>
+</div>
+
+<div id="modal-root"></div>
+
+<script>
+/* =========================================================
+   AULD REEKIE TYCOON — data & engine
+   ========================================================= */
+
+const COLORS = {
+  brown:'#7a4a2b', lightblue:'#9fd6e6', pink:'#d16aa0', orange:'#e08a3c',
+  red:'#c1443c', yellow:'#e3c23c', green:'#2f7a4f', darkblue:'#274a8c',
+  railroad:'#444', utility:'#888', special:'#c99a3c'
+};
+
+// tile definition helper
+function P(name, group, price){ return {name, type:'property', group, price, rentBase: Math.round(price/10/2)*2, houseCost: Math.round(price/2/10)*10, houses:0, owner:null}; }
+function R(name){ return {name, type:'railroad', price:200, owner:null}; }
+function U(name){ return {name, type:'utility', price:150, owner:null}; }
+
+const BOARD = [
+  {name:'GO — Waverley Station', type:'go'},
+  P('Leith Walk','brown',60),
+  {name:'Division Dash', type:'chest'},
+  P('Pilton Road','brown',60),
+  {name:'Times Tax (Income)', type:'tax', amount:200},
+  R('Haymarket Station'),
+  P('Gorgie Road','lightblue',100),
+  {name:'Times Trial', type:'chance'},
+  P('Dalry Road','lightblue',100),
+  P('Slateford Road','lightblue',120),
+  {name:'Castle Dungeons (Just Visiting)', type:'jail'},
+  P('Tollcross','pink',140),
+  U('Edinburgh Trams'),
+  P('Bruntsfield','pink',140),
+  P('Morningside','pink',160),
+  R('Edinburgh Airport Tram'),
+  P('Marchmont','orange',180),
+  {name:'Division Dash', type:'chest'},
+  P('Newington','orange',180),
+  P('Southside','orange',200),
+  {name:'Princes Street Gardens (Free Parking)', type:'freeparking'},
+  P('Stockbridge','red',220),
+  {name:'Times Trial', type:'chance'},
+  P('Broughton','red',220),
+  P('Canonmills','red',240),
+  R('Leith Docks Station'),
+  P('New Town','yellow',260),
+  P('Dean Village','yellow',260),
+  U('City Bike Hire'),
+  P('Grassmarket','yellow',280),
+  {name:'Go To Castle Dungeons!', type:'gotojail'},
+  P('Royal Mile','green',300),
+  P('Cowgate','green',300),
+  {name:'Division Dash', type:'chest'},
+  P('Canongate','green',320),
+  R('South Bridge Station'),
+  {name:'Times Trial', type:'chance'},
+  P('Calton Hill','darkblue',350),
+  {name:'Castle Tax (Luxury)', type:'tax', amount:100},
+  P('Edinburgh Castle','darkblue',400)
+];
+
+const PLAYER_COLORS = ['#c1443c','#274a8c','#2f7a4f','#c99a3c'];
+
+let players = [];
+let currentPlayerIndex = 0;
+let lastRoll = [1,1];
+let doublesCount = 0;
+let gameStarted = false;
+let awaitingModal = false;
+
+/* ---------- math question generation ---------- */
+function randInt(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+
+function tierForPrice(price){
+  if(!price) return 1;
+  if(price <= 120) return 1;   // tables 2-6
+  if(price <= 200) return 2;   // tables 3-8
+  if(price <= 300) return 3;   // tables 5-10
+  return 4;                    // tables 6-12
+}
+function tableRangeForTier(t){
+  switch(t){
+    case 1: return [2,6];
+    case 2: return [3,8];
+    case 3: return [5,10];
+    default: return [6,12];
+  }
+}
+
+function genQuestion(tier, forceType){
+  const [lo,hi] = tableRangeForTier(tier||2);
+  const a = randInt(lo,hi);
+  const b = randInt(2,12);
+  const isDiv = forceType==='div' ? true : (forceType==='mult' ? false : Math.random()<0.45);
+  if(isDiv){
+    const product = a*b;
+    return { text: `${product} ÷ ${a} = ?`, answer: b };
+  } else {
+    return { text: `${a} × ${b} = ?`, answer: a*b };
+  }
+}
+
+/* ---------- Card decks ---------- */
+function drawTimesTrialCard(){
+  const cards = [
+    {text:'A tourist asks for directions. Answer to earn a wee tip!', tier:2, reward:20},
+    {text:'Fringe Festival crowd — solve it for extra ticket sales!', tier:3, reward:40},
+    {text:'The tram inspector tests you before letting you board!', tier:2, reward:0, penalty:30},
+    {text:'Castle guard riddle — get it right to pass!', tier:4, reward:50},
+    {text:'Haggis vendor maths — correct change wins a bonus!', tier:1, reward:15},
+    {text:'Bagpiper busking — solve for a share of the coins!', tier:3, reward:30},
+  ];
+  return cards[randInt(0,cards.length-1)];
+}
+function drawDivisionDashCard(){
+  const cards = [
+    {text:'Split the shortbread fairly — solve the division!', tier:2, reward:20},
+    {text:'Ceilidh dance groups — divide the dancers evenly!', tier:3, reward:35},
+    {text:'Royal Mile street performer tests your skills!', tier:2, reward:0, penalty:25},
+    {text:'Arthur\'s Seat hike — pace yourself with a division sum!', tier:4, reward:45},
+    {text:'Whisky tasting flight — divide the drams correctly!', tier:3, reward:30},
+    {text:'Loch Ness ferry tickets — split the group cost!', tier:1, reward:15},
+  ];
+  return cards[randInt(0,cards.length-1)];
+}
+
+/* ---------- setup ---------- */
+function setupPlayers(names){
+  players = names.map((n,i)=>({
+    id:i, name:n, color: PLAYER_COLORS[i], money:1500, position:0,
+    properties:[], inJail:false, jailTurns:0, bankrupt:false
+  }));
+}
+
+function log(msg){
+  const el = document.getElementById('log');
+  const d = document.createElement('div');
+  d.innerHTML = msg;
+  el.prepend(d);
+}
+
+/* ---------- board rendering ---------- */
+function gridPosFor(i){
+  if(i>=0 && i<=10){ return {row:11, col: 11-i}; }
+  if(i>=10 && i<=20){ return {row: 21-i, col:1}; }
+  if(i>=20 && i<=30){ return {row:1, col: i-19}; }
+  if(i>=30 && i<=39){ return {row: i-29, col:11}; }
+}
+
+function renderBoard(){
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+  const center = document.createElement('div');
+  center.id = 'center-logo';
+  center.innerHTML = `<div class="kilt-strip"></div><h2>AULD REEKIE<br>TYCOON</h2>
+    <div style="font-size:0.85em;max-width:220px;">Land, learn yer times tables, and dinnae go bankrupt in Auld Reekie!</div>
+    <div class="kilt-strip"></div>`;
+  board.appendChild(center);
+
+  BOARD.forEach((tile, i)=>{
+    const pos = gridPosFor(i);
+    const div = document.createElement('div');
+    div.className = 'tile';
+    div.dataset.idx = i;
+    div.style.gridRow = pos.row;
+    div.style.gridColumn = pos.col;
+    const isCorner = [0,10,20,30].includes(i);
+    if(isCorner) div.classList.add('corner');
+    if(tile.type==='railroad') div.classList.add('railroad');
+    if(tile.type==='utility') div.classList.add('utility');
+
+    let bandColor = null;
+    if(tile.type==='property') bandColor = COLORS[tile.group];
+    if(tile.type==='railroad') bandColor = COLORS.railroad;
+    if(tile.type==='utility') bandColor = COLORS.utility;
+
+    let inner = '';
+    if(bandColor && !isCorner){
+      inner += `<div class="band" style="background:${bandColor}"></div>`;
+    }
+    let priceLine = '';
+    if(tile.type==='property') priceLine = `<div class="price">£${tile.price}</div>`;
+    if(tile.type==='railroad' || tile.type==='utility') priceLine = `<div class="price">£${tile.price}</div>`;
+    if(tile.type==='tax') priceLine = `<div class="price">£${tile.amount}</div>`;
+
+    inner += `<div class="name">${tile.name}</div>${priceLine}`;
+    inner += `<div class="tokens-on-tile" id="tokens-${i}"></div>`;
+    if(tile.type==='property'){
+      inner += `<div id="ownmark-${i}"></div>`;
+      inner += `<div class="house-mark" id="housemark-${i}"></div>`;
+    }
+    if(tile.type==='railroad' || tile.type==='utility'){
+      inner += `<div id="ownmark-${i}"></div>`;
+    }
+    div.innerHTML = inner;
+    div.addEventListener('click', ()=> showTileInfo(i));
+    board.appendChild(div);
+  });
+
+  refreshOwnershipMarks();
+  refreshTokens();
+}
+
+function refreshOwnershipMarks(){
+  BOARD.forEach((tile,i)=>{
+    const markEl = document.getElementById('ownmark-'+i);
+    if(!markEl) return;
+    markEl.innerHTML = '';
+    if(tile.owner!=null){
+      const p = players[tile.owner];
+      const dot = document.createElement('div');
+      dot.className='owned-mark';
+      dot.style.background = p.color;
+      dot.style.position='absolute';
+      dot.style.bottom='2px'; dot.style.left='2px';
+      markEl.appendChild(dot);
+    }
+    if(tile.type==='property'){
+      const hm = document.getElementById('housemark-'+i);
+      if(hm){
+        hm.textContent = tile.houses>0 ? (tile.houses===5 ? '🏨' : '🏠'.repeat(tile.houses)) : '';
+      }
+    }
+  });
+}
+
+function refreshTokens(){
+  BOARD.forEach((tile,i)=>{
+    const el = document.getElementById('tokens-'+i);
+    if(!el) return;
+    el.innerHTML='';
+  });
+  players.forEach(p=>{
+    if(p.bankrupt) return;
+    const el = document.getElementById('tokens-'+p.position);
+    if(!el) return;
+    const dot = document.createElement('div');
+    dot.className='token-dot';
+    dot.style.background = p.color;
+    dot.title = p.name;
+    el.appendChild(dot);
+  });
+}
+
+/* ---------- players panel ---------- */
+function renderPlayersPanel(){
+  const el = document.getElementById('players-list');
+  el.innerHTML = '';
+  players.forEach((p,i)=>{
+    const row = document.createElement('div');
+    row.className = 'player-row' + (i===currentPlayerIndex && !p.bankrupt ? ' active':'');
+    row.innerHTML = `<div class="swatch" style="background:${p.color}"></div>
+      <div class="pname">${p.name}${p.bankrupt? ' (bankrupt)':''}${p.inJail? ' 🔒':''}</div>
+      <div class="pmoney">£${p.money}</div>`;
+    el.appendChild(row);
+  });
+  renderPropertyPanel();
+}
+
+function renderPropertyPanel(){
+  const wrap = document.getElementById('property-panel-wrap');
+  const panel = document.getElementById('property-panel');
+  const p = players[currentPlayerIndex];
+  if(!p || p.properties.length===0){ wrap.style.display='none'; return; }
+  wrap.style.display='block';
+  panel.innerHTML = '';
+  p.properties.forEach(idx=>{
+    const t = BOARD[idx];
+    const line = document.createElement('div');
+    line.className='prop-line';
+    let extra = '';
+    if(t.type==='property' && ownsFullGroup(p, t.group) && t.houses<5){
+      extra = `<button class="action-btn" style="padding:2px 8px;font-size:0.8em;" onclick="buildHouse(${idx})">Build £${t.houseCost}</button>`;
+    }
+    line.innerHTML = `<span>${t.name}</span><span>${extra}</span>`;
+    panel.appendChild(line);
+  });
+}
+
+/* ---------- group ownership check ---------- */
+function ownsFullGroup(player, group){
+  const groupTiles = BOARD.map((t,i)=>({t,i})).filter(x=>x.t.type==='property' && x.t.group===group);
+  return groupTiles.every(x=> x.t.owner===player.id);
+}
+function countRailroadsOwned(playerId){
+  return BOARD.filter(t=>t.type==='railroad' && t.owner===playerId).length;
+}
+function countUtilitiesOwned(playerId){
+  return BOARD.filter(t=>t.type==='utility' && t.owner===playerId).length;
+}
+
+/* ---------- rent calc ---------- */
+const HOUSE_MULT = [1,4,10,20,30,45]; // index = houses (0..5, 5=hotel)
+function rentFor(tile, diceTotal){
+  if(tile.type==='property'){
+    const mult = HOUSE_MULT[tile.houses];
+    let base = tile.rentBase * mult;
+    if(tile.houses===0 && ownsFullGroup(players[tile.owner], tile.group)) base *= 2;
+    return base;
+  }
+  if(tile.type==='railroad'){
+    const n = countRailroadsOwned(tile.owner);
+    return [0,25,50,100,200][n];
+  }
+  if(tile.type==='utility'){
+    const n = countUtilitiesOwned(tile.owner);
+    return diceTotal * (n===2? 10:4);
+  }
+  return 0;
+}
+
+/* ---------- modal helper (question) ---------- */
+function askMathQuestion({title, question, tier, onCorrect, onWrong, allowSkip, skipLabel}){
+  awaitingModal = true;
+  const root = document.getElementById('modal-root');
+  const q = question || genQuestion(tier);
+  root.innerHTML = `
+    <div class="modal-overlay">
+      <div class="modal-box">
+        <div class="badge">📐 Times &amp; Division Challenge</div>
+        <h2>${title}</h2>
+        <div class="question">${q.text}</div>
+        <input type="number" id="answer-input" autofocus />
+        <div class="feedback" id="q-feedback"></div>
+        <div class="modal-actions">
+          <button class="action-btn" id="submit-answer">Submit</button>
+          ${allowSkip? `<button class="action-btn" id="skip-answer" style="background:#aaa;">${skipLabel||'Skip'}</button>`:''}
+        </div>
+      </div>
+    </div>`;
+  const input = document.getElementById('answer-input');
+  const submit = document.getElementById('submit-answer');
+  const fb = document.getElementById('q-feedback');
+  input.focus();
+  function finish(correct){
+    root.innerHTML='';
+    awaitingModal = false;
+    if(correct) onCorrect && onCorrect();
+    else onWrong && onWrong();
+  }
+  submit.onclick = ()=>{
+    const val = parseInt(input.value,10);
+    if(val === q.answer){
+      fb.textContent = 'Correct! Nice one!';
+      fb.className='feedback good';
+      setTimeout(()=>finish(true), 550);
+    } else {
+      fb.textContent = `Not quite — the answer was ${q.answer}.`;
+      fb.className='feedback bad';
+      setTimeout(()=>finish(false), 1200);
+    }
+  };
+  input.addEventListener('keydown', e=>{ if(e.key==='Enter') submit.click(); });
+  if(allowSkip){
+    document.getElementById('skip-answer').onclick = ()=> finish(false);
+  }
+}
+
+function showMessageModal({title, html, buttonLabel, onClose}){
+  awaitingModal = true;
+  const root = document.getElementById('modal-root');
+  root.innerHTML = `
+    <div class="modal-overlay">
+      <div class="modal-box">
+        <h2>${title}</h2>
+        <div style="margin:12px 0;">${html}</div>
+        <div class="modal-actions">
+          <button class="action-btn" id="close-msg">${buttonLabel||'OK'}</button>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('close-msg').onclick = ()=>{
+    root.innerHTML='';
+    awaitingModal = false;
+    onClose && onClose();
+  };
+}
+
+function showTileInfo(i){
+  if(awaitingModal) return;
+  const t = BOARD[i];
+  let details = `<p>${t.type==='property'||t.type==='railroad'||t.type==='utility' ? 'Price: £'+t.price : ''}</p>`;
+  if(t.owner!=null) details += `<p>Owned by: ${players[t.owner].name}</p>`;
+  if(t.type==='property') details += `<p>Houses: ${t.houses}</p>`;
+  showMessageModal({title:t.name, html: details || '<p>Just a spot on the board.</p>'});
+}
+
+/* ---------- purchase flow ---------- */
+function offerPurchase(player, tileIdx){
+  const t = BOARD[tileIdx];
+  showMessageModal({
+    title: `Land on ${t.name}`,
+    html: `<p>Unowned! Price: <b>£${t.price}</b>.<br>${player.name}, want tae buy it? You'll need to answer a times-table/division question first.</p>`,
+    buttonLabel: 'Attempt to Buy',
+    onClose: ()=>{
+      askMathQuestion({
+        title: `Buy ${t.name}?`,
+        tier: tierForPrice(t.price),
+        allowSkip:true, skipLabel:"Don't buy",
+        onCorrect: ()=>{
+          if(player.money >= t.price){
+            player.money -= t.price;
+            t.owner = player.id;
+            player.properties.push(tileIdx);
+            log(`✅ ${player.name} correctly solved it and bought <b>${t.name}</b> for £${t.price}.`);
+          } else {
+            log(`${player.name} solved it but doesn't have enough gold for ${t.name}.`);
+          }
+          refreshOwnershipMarks(); renderPlayersPanel();
+          endTurnIfNoDoubles();
+        },
+        onWrong: ()=>{
+          log(`❌ ${player.name} didn't solve it — ${t.name} stays unowned for now.`);
+          endTurnIfNoDoubles();
+        }
+      });
+    }
+  });
+}
+
+/* ---------- rent flow ---------- */
+function chargeRent(player, tileIdx){
+  const t = BOARD[tileIdx];
+  const owner = players[t.owner];
+  const amount = rentFor(t, lastRoll[0]+lastRoll[1]);
+  askMathQuestion({
+    title: `Rent due to ${owner.name}!`,
+    tier: tierForPrice(t.price || 200),
+    onCorrect: ()=>{
+      payRent(player, owner, amount);
+      log(`${player.name} solved the sum and paid the correct rent of £${amount} to ${owner.name} for ${t.name}.`);
+      endTurnIfNoDoubles();
+    },
+    onWrong: ()=>{
+      const penalty = Math.round(amount*1.5);
+      payRent(player, owner, penalty);
+      log(`${player.name} got the sum wrong — penalty rent of £${penalty} paid to ${owner.name}!`);
+      endTurnIfNoDoubles();
+    }
+  });
+}
+
+function payRent(player, owner, amount){
+  player.money -= amount;
+  owner.money += amount;
+  checkBankruptcy(player);
+  renderPlayersPanel();
+}
+
+function checkBankruptcy(player){
+  if(player.money < 0 && !player.bankrupt){
+    player.bankrupt = true;
+    player.properties.forEach(idx=>{ BOARD[idx].owner=null; BOARD[idx].houses=0; });
+    player.properties = [];
+    log(`💀 ${player.name} has gone bankrupt and is out of the game!`);
+    refreshOwnershipMarks();
+  }
+}
+
+/* ---------- houses ---------- */
+function buildHouse(idx){
+  const t = BOARD[idx];
+  const p = players[currentPlayerIndex];
+  if(t.owner !== p.id) return;
+  if(p.money < t.houseCost){ log(`${p.name} cannae afford a house on ${t.name}.`); return; }
+  p.money -= t.houseCost;
+  t.houses = Math.min(5, t.houses+1);
+  log(`🏠 ${p.name} built on ${t.name}. (${t.houses===5?'Hotel!':t.houses+' house(s)'})`);
+  refreshOwnershipMarks(); renderPlayersPanel();
+}
+window.buildHouse = buildHouse;
+
+/* ---------- cards ---------- */
+function handleChanceOrChest(player, isChance){
+  const card = isChance ? drawTimesTrialCard() : drawDivisionDashCard();
+  showMessageModal({
+    title: isChance ? '🎴 Times Trial' : '🎴 Division Dash',
+    html: `<p>${card.text}</p>`,
+    buttonLabel: 'Answer the Question',
+    onClose: ()=>{
+      askMathQuestion({
+        title: isChance? 'Times Trial' : 'Division Dash',
+        tier: card.tier,
+        onCorrect: ()=>{
+          if(card.reward){ player.money += card.reward; log(`${player.name} solved it and earned £${card.reward}!`); }
+          else { log(`${player.name} solved it — nae reward this time, but well done!`); }
+          renderPlayersPanel();
+          endTurnIfNoDoubles();
+        },
+        onWrong: ()=>{
+          if(card.penalty){ player.money -= card.penalty; checkBankruptcy(player); log(`${player.name} slipped up and paid £${card.penalty}.`); }
+          else { log(`${player.name} slipped up, but no harm done.`); }
+          renderPlayersPanel();
+          endTurnIfNoDoubles();
+        }
+      });
+    }
+  });
+}
+
+/* ---------- tax ---------- */
+function handleTax(player, tile){
+  askMathQuestion({
+    title: tile.name,
+    tier: 3,
+    onCorrect: ()=>{
+      const reduced = Math.round(tile.amount*0.6);
+      player.money -= reduced;
+      checkBankruptcy(player);
+      log(`${player.name} solved the sum — reduced tax of £${reduced} paid.`);
+      renderPlayersPanel();
+      endTurnIfNoDoubles();
+    },
+    onWrong: ()=>{
+      player.money -= tile.amount;
+      checkBankruptcy(player);
+      log(`${player.name} owes full tax of £${tile.amount}.`);
+      renderPlayersPanel();
+      endTurnIfNoDoubles();
+    }
+  });
+}
+
+/* ---------- jail ---------- */
+function sendToJail(player){
+  player.position = 10;
+  player.inJail = true;
+  player.jailTurns = 0;
+  log(`🚔 ${player.name} was sent straight to the Castle Dungeons!`);
+  refreshTokens();
+}
+
+function tryJailEscape(player){
+  showMessageModal({
+    title:'Castle Dungeons',
+    html:`<p>${player.name}, answer this cannier question to escape free, or pay £50 bail.</p>`,
+    buttonLabel:'Attempt Escape Question',
+    onClose: ()=>{
+      askMathQuestion({
+        title:'Escape the Dungeons!',
+        tier:4,
+        allowSkip:true, skipLabel:'Pay £50 bail instead',
+        onCorrect: ()=>{
+          player.inJail=false;
+          log(`🔓 ${player.name} solved the cannier question and escaped the dungeons free!`);
+          renderPlayersPanel();
+          continueTurnAfterJail(player, true);
+        },
+        onWrong: ()=>{
+          player.jailTurns++;
+          if(player.jailTurns>=3){
+            player.money-=50; player.inJail=false; player.jailTurns=0;
+            checkBankruptcy(player);
+            log(`${player.name} paid £50 bail after 3 tries and is free.`);
+            renderPlayersPanel();
+            continueTurnAfterJail(player, true);
+          } else {
+            log(`${player.name} stays in the dungeons this turn.`);
+            continueTurnAfterJail(player, false);
+          }
+        }
+      });
+    }
+  });
+}
+
+function continueTurnAfterJail(player, moved){
+  if(moved){
+    // player already escaped, now they can roll normally next click already handled by turn flow
+  }
+  refreshTokens();
+  nextPlayerTurn();
+}
+
+/* ---------- main turn flow ---------- */
+function rollDice(){
+  if(awaitingModal) return;
+  const player = players[currentPlayerIndex];
+  if(player.bankrupt){ nextPlayerTurn(); return; }
+  document.getElementById('roll-btn').disabled = true;
+
+  if(player.inJail){
+    tryJailEscape(player);
+    return;
+  }
+
+  const d1 = randInt(1,6), d2 = randInt(1,6);
+  lastRoll = [d1,d2];
+  document.getElementById('die1').textContent = d1;
+  document.getElementById('die2').textContent = d2;
+  const isDouble = d1===d2;
+  doublesCount = isDouble ? doublesCount+1 : 0;
+
+  if(isDouble && doublesCount>=3){
+    log(`${player.name} rolled doubles three times in a row — straight to the dungeons!`);
+    sendToJail(player);
+    doublesCount=0;
+    setTimeout(()=>{ document.getElementById('roll-btn').disabled=false; nextPlayerTurn(); }, 700);
+    return;
+  }
+
+  const steps = d1+d2;
+  const oldPos = player.position;
+  const newPos = (oldPos + steps) % 40;
+  const passedGo = newPos < oldPos;
+  player.position = newPos;
+  refreshTokens();
+
+  if(passedGo){
+    player.money += 200;
+    log(`${player.name} passed GO and collected £200.`);
+  }
+  log(`${player.name} rolled ${d1} + ${d2} = ${steps}, landing on <b>${BOARD[newPos].name}</b>.`);
+  renderPlayersPanel();
+
+  setTimeout(()=> resolveTile(player, newPos, isDouble), 400);
+}
+
+function resolveTile(player, idx, wasDouble){
+  const t = BOARD[idx];
+  switch(t.type){
+    case 'go': endTurnOrDouble(wasDouble); break;
+    case 'jail': endTurnOrDouble(wasDouble); break;
+    case 'freeparking': log(`${player.name} enjoys a free rest in Princes Street Gardens.`); endTurnOrDouble(wasDouble); break;
+    case 'gotojail': sendToJail(player); renderPlayersPanel(); setTimeout(()=>nextPlayerTurn(),500); break;
+    case 'tax': handleTax(player, t); break;
+    case 'chance': handleChanceOrChest(player, true); break;
+    case 'chest': handleChanceOrChest(player, false); break;
+    case 'property': case 'railroad': case 'utility':
+      if(t.owner===null){
+        offerPurchase(player, idx);
+      } else if(t.owner===player.id){
+        log(`${player.name} owns this already.`);
+        endTurnOrDouble(wasDouble);
+      } else {
+        chargeRentWrapper(player, idx, wasDouble);
+      }
+      break;
+    default: endTurnOrDouble(wasDouble);
+  }
+}
+
+function chargeRentWrapper(player, idx, wasDouble){
+  // wrap chargeRent so double-roll re-roll still respected after modal closes
+  const t = BOARD[idx];
+  const owner = players[t.owner];
+  const amount = rentFor(t, lastRoll[0]+lastRoll[1]);
+  askMathQuestion({
+    title: `Rent due to ${owner.name}!`,
+    tier: tierForPrice(t.price || 200),
+    onCorrect: ()=>{
+      payRent(player, owner, amount);
+      log(`${player.name} solved the sum and paid rent of £${amount} to ${owner.name} for ${t.name}.`);
+      endTurnOrDouble(wasDouble);
+    },
+    onWrong: ()=>{
+      const penalty = Math.round(amount*1.5);
+      payRent(player, owner, penalty);
+      log(`${player.name} got the sum wrong — penalty rent of £${penalty} paid to ${owner.name}!`);
+      endTurnOrDouble(wasDouble);
+    }
+  });
+}
+
+function endTurnIfNoDoubles(){
+  // used by purchase/card/tax flows triggered outside resolveTile's double context; treat as normal end
+  endTurnOrDouble(false);
+}
+
+function endTurnOrDouble(wasDouble){
+  renderPlayersPanel();
+  checkWinCondition();
+  document.getElementById('roll-btn').disabled = false;
+  if(wasDouble){
+    log(`Doubles! ${players[currentPlayerIndex].name} rolls again.`);
+  } else {
+    nextPlayerTurn();
+  }
+}
+
+function nextPlayerTurn(){
+  doublesCount = 0;
+  document.getElementById('roll-btn').disabled = false;
+  let attempts=0;
+  do{
+    currentPlayerIndex = (currentPlayerIndex+1) % players.length;
+    attempts++;
+  } while(players[currentPlayerIndex].bankrupt && attempts<players.length+1);
+  renderPlayersPanel();
+}
+
+function checkWinCondition(){
+  const alive = players.filter(p=>!p.bankrupt);
+  if(alive.length===1){
+    showMessageModal({title:'🏆 Game Over!', html:`<p><b>${alive[0].name}</b> has won Auld Reekie Tycoon!</p>`, buttonLabel:'Braw!'});
+    document.getElementById('roll-btn').disabled = true;
+  }
+}
+
+/* ---------- start game ---------- */
+function startGame(numPlayers){
+  const names = [];
+  for(let i=0;i<numPlayers;i++){ names.push(`Player ${i+1}`); }
+  setupPlayers(names);
+  renderBoard();
+  renderPlayersPanel();
+  log('Welcome tae Auld Reekie Tycoon! Roll the dice tae begin. Answer times-table &amp; division questions to buy property, pay rent, and escape the dungeons!');
+  document.getElementById('roll-btn').addEventListener('click', rollDice);
+}
+
+/* ---------- initial player-count picker ---------- */
+function showStartModal(){
+  awaitingModal = true;
+  const root = document.getElementById('modal-root');
+  root.innerHTML = `
+    <div class="modal-overlay">
+      <div class="modal-box">
+        <h2>Gather yer players</h2>
+        <p>How many players (2-4) are hitting the Auld Reekie streets?</p>
+        <select id="num-players">
+          <option value="2">2 Players</option>
+          <option value="3">3 Players</option>
+          <option value="4">4 Players</option>
+        </select>
+        <div class="modal-actions">
+          <button class="action-btn" id="start-game-btn">Start Game</button>
+        </div>
+        <p class="small-note">Tip: click any tile on the board anytime to peek at its details.</p>
+      </div>
+    </div>`;
+  document.getElementById('start-game-btn').onclick = ()=>{
+    const n = parseInt(document.getElementById('num-players').value,10);
+    document.getElementById('modal-root').innerHTML='';
+    awaitingModal = false;
+    startGame(n);
+  };
+}
+
+renderBoard();
+showStartModal();
+
+</script>
+</body>
+</html>
